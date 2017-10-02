@@ -1,6 +1,6 @@
 <?php
-/* 
-    syncthing.php
+/*
+    syncthing-inotify.php
 
     Copyright (c) 2013 - 2017 Andreas Schmidhuber <info@a3s.at>
     All rights reserved.
@@ -30,9 +30,9 @@ require("guiconfig.inc");
 
 bindtextdomain("nas4free", "/usr/local/share/locale-stg");
 
-$config_file = "ext/syncthing/syncthing.conf";
-require_once("ext/syncthing/extension-lib.inc");
-if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing.conf");
+$config_file = "ext/syncthing-inotify/syncthing-inotify.conf";
+require_once("ext/syncthing-inotify/extension-lib.inc");
+if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing-inotify.conf");
 if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
 require_once("{$configuration['rootfolder']}files/xml_converter.php");
 require_once("{$configuration['rootfolder']}files/functions.inc");
@@ -74,7 +74,7 @@ function change_perms($dir) {
             }
             else
             {
-                $input_errors[] = sprintf(gettext("Syncthing needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."), $path, "/{$path_check[1]}/{$path_check[2]}");
+                $input_errors[] = sprintf(gettext("Syncthing Inotify needs at least read & execute permissions at the mount point for directory %s! Set the Read and Execute bits for Others (Access Restrictions | Mode) for the mount point %s (in <a href='disks_mount.php'>Disks | Mount Point | Management</a> or <a href='disks_zfs_dataset.php'>Disks | ZFS | Datasets</a>) and hit Save in order to take them effect."), $path, "/{$path_check[1]}/{$path_check[2]}");
             }
         }
     }
@@ -95,14 +95,14 @@ if (isset($_POST['save']) && $_POST['save']) {
             if ($configuration['storage_path'] !== $_POST['storage_path']) {
                 if (is_file("{$configuration['storage_path']}config.xml") && !is_file("{$_POST['storage_path']}config.xml")) {
                     mwexec("cp -v {$configuration['storage_path']}config.xml {$_POST['storage_path']}config.xml", true);
-                }                
+                }
             }
             $configuration['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $configuration['rootfolder']."config/";
             $configuration['storage_path'] = rtrim($configuration['storage_path'],'/')."/";     // ensure to have a trailing slash
-            exec("chown -R {$_POST['who']} {$configuration['storage_path']}");                        // syncthing user
-    
+            exec("chown -R {$_POST['who']} {$configuration['storage_path']}");                        // syncthing-inotify user
+
             if (is_file($configuration['storage_path']."config.xml")) { $sync_conf = XML2Array::createArray(file_get_contents($configuration['storage_path']."config.xml")); }
-            else { 
+            else {
                 $sync_conf = array();
                 $sync_conf['configuration']['@attributes']['version'] = "7";
             }
@@ -134,16 +134,16 @@ if (isset($_POST['save']) && $_POST['save']) {
             $sync_conf['configuration']['options']['parallelRequests'] = !empty($_POST['parallelRequests']) ? $_POST['parallelRequests'] : "16";
             $sync_conf['configuration']['options']['rescanIntervalS'] = !empty($_POST['rescanIntervalS']) ? $_POST['rescanIntervalS'] : "60";
             $sync_conf['configuration']['options']['reconnectionIntervalS'] = !empty($_POST['reconnectionIntervalS']) ? $_POST['reconnectionIntervalS'] : "60";
-    
-    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing -home {$configuration['storage_path']} -logflags=3 > {$configuration['storage_path']}syncthing.log & '";
-    
+
+    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify -home {$configuration['storage_path']} -logflags=3 > {$configuration['storage_path']}syncthing-inotify.log & '";
+
             $xmlout = Array2XML::createXML('configuration', $sync_conf['configuration']);
             $xmlout = $xmlout->saveXML();
             file_put_contents($configuration['storage_path']."config.xml", $xmlout);
-    
-            exec("killall syncthing");
+
+            exec("killall syncthing-inotify");
             $return_val = 0;
-            while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing', $output, $return_val); }
+            while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing-inotify', $output, $return_val); }
             unset ($output);
             exec($configuration['command'], $output, $return_val);
             if ($return_val != 0) { $input_errors = $output; }
@@ -209,7 +209,7 @@ if (isset($_POST['save']) && $_POST['save']) {
                 	}
                 updatenotify_set("cronjob", $mode, $cronjob['uuid']);
                 write_config();
-                header("Location: syncthing.php");
+                header("Location: syncthing-inotify.php");
 
         		$retval = 0;
         		if (!file_exists($d_sysrebootreqd_path)) {
@@ -225,8 +225,8 @@ if (isset($_POST['save']) && $_POST['save']) {
             }   // end of activate cronjobs
 			ext_save_config($config_file, $configuration);
         }   // end of enable extension
-		else { 
-            exec("killall syncthing"); $savemsg = $savemsg." ".$configuration['appname'].gettext(" is now disabled!"); 
+		else {
+            exec("killall syncthing-inotify"); $savemsg = $savemsg." ".$configuration['appname'].gettext(" is now disabled!");
             $configuration['enable'] = isset($_POST['enable']);
             if ($configuration['enable_schedule']) {  // if cronjobs exists -> deactivate
                 $cronjob = array();
@@ -249,7 +249,7 @@ if (isset($_POST['save']) && $_POST['save']) {
                 	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
                 	$cronjob['who'] = $a_cronjob[$cnid]['who'];
                 	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                } 
+                }
                 if (isset($uuid) && (FALSE !== $cnid)) {
                 		$a_cronjob[$cnid] = $cronjob;
                 		$mode = UPDATENOTIFY_MODE_MODIFIED;
@@ -258,7 +258,7 @@ if (isset($_POST['save']) && $_POST['save']) {
                 		$mode = UPDATENOTIFY_MODE_NEW;
                 	}
                 updatenotify_set("cronjob", $mode, $cronjob['uuid']);
-    
+
                 unset ($cronjob);
                 $cronjob = array();
 				if (!is_array($config['cron'])) $config['cron'] = [];
@@ -280,7 +280,7 @@ if (isset($_POST['save']) && $_POST['save']) {
                 	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
                 	$cronjob['who'] = $a_cronjob[$cnid]['who'];
                 	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                } 
+                }
                 if (isset($uuid) && (FALSE !== $cnid)) {
                 		$a_cronjob[$cnid] = $cronjob;
                 		$mode = UPDATENOTIFY_MODE_MODIFIED;
@@ -290,8 +290,8 @@ if (isset($_POST['save']) && $_POST['save']) {
                 	}
                 updatenotify_set("cronjob", $mode, $cronjob['uuid']);
                 write_config();
-                header("Location: syncthing.php");
-    
+                header("Location: syncthing-inotify.php");
+
         		$retval = 0;
         		if (!file_exists($d_sysrebootreqd_path)) {
         			$retval |= updatenotify_process("cronjob", "cronjob_process_updatenotification");
@@ -316,7 +316,7 @@ $pconfig['ipaddr'] = !empty($configuration['ipaddr']) ? $configuration['ipaddr']
 $pconfig['port'] = !empty($configuration['port']) ? $configuration['port'] : "9999";
 $pconfig['listen_to_all'] = $configuration['listen_to_all'];
 $pconfig['storage_path'] = !empty($configuration['storage_path']) ? $configuration['storage_path'] : $configuration['rootfolder']."config/";
-if (is_file($configuration['storage_path']."config.xml")) { $sync_conf = XML2Array::createArray(file_get_contents($configuration['storage_path']."config.xml")); } 
+if (is_file($configuration['storage_path']."config.xml")) { $sync_conf = XML2Array::createArray(file_get_contents($configuration['storage_path']."config.xml")); }
 $pconfig['gui_enabled'] = isset($sync_conf['configuration']['gui']['@attributes']['enabled']) ? $sync_conf['configuration']['gui']['@attributes']['enabled'] : "true";
 $pconfig['gui_tls'] = isset($sync_conf['configuration']['gui']['@attributes']['tls']) ? $sync_conf['configuration']['gui']['@attributes']['tls'] : "true";
 $pconfig['address'] = !empty($sync_conf['configuration']['gui']['address']) ? $sync_conf['configuration']['gui']['address'] : "{$pconfig['ipaddr']}:{$pconfig['port']}";
@@ -342,11 +342,11 @@ $pconfig['parallelRequests'] = !empty($sync_conf['configuration']['options']['pa
 $pconfig['rescanIntervalS'] = !empty($sync_conf['configuration']['options']['rescanIntervalS']) ? $sync_conf['configuration']['options']['rescanIntervalS'] : "60";
 $pconfig['reconnectionIntervalS'] = !empty($sync_conf['configuration']['options']['reconnectionIntervalS']) ? $sync_conf['configuration']['options']['reconnectionIntervalS'] : "60";
 
-// check for default globalAnnounceServer from older STG versions < v0.10.15 and eventually change to udp format  
-$v = explode(" ", stg_call("syncthing -version"));
-$strarray = array("v0.", "."); 
+// check for default globalAnnounceServer from older STG versions < v0.10.15 and eventually change to udp format
+$v = explode(" ", stg_call("syncthing-inotify -version"));
+$strarray = array("v0.", ".");
 $vstr = str_replace($strarray, "", $v[1]);
-if (($pconfig['globalAnnounceServer'] == "announce.syncthing.net:22025") && ($vstr >= 1015)) { $pconfig['globalAnnounceServer'] = GLOBALASERVER; }  
+if (($pconfig['globalAnnounceServer'] == "announce.syncthing-inotify.net:22025") && ($vstr >= 1015)) { $pconfig['globalAnnounceServer'] = GLOBALASERVER; }
 
 $a_interface = get_interface_list();
 // Add VLAN interfaces (from user Vasily1)
@@ -368,7 +368,7 @@ if (isset($config['vinterfaces']['lagg']) && is_array($config['vinterfaces']['la
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
 
 function get_process_info() {
-    if (exec('ps acx | grep syncthing')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
+    if (exec('ps acx | grep syncthing-inotify')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
     else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
 	return ($state);
 }
@@ -378,14 +378,14 @@ if (is_ajax()) {
 	render_ajax($procinfo);
 }
 
-if (($message = ext_check_version("{$configuration['rootfolder']}version_server.txt", "syncthing", $configuration['version'], gettext("Extension Maintenance"))) !== false) $savemsg .= $message;
+if (($message = ext_check_version("{$configuration['rootfolder']}version_server.txt", "syncthing-inotify", $configuration['version'], gettext("Extension Maintenance"))) !== false) $savemsg .= $message;
 
 bindtextdomain("nas4free", "/usr/local/share/locale");
-include("fbegin.inc");?>  
+include("fbegin.inc");?>
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
 	var gui = new GUI;
-	gui.recall(0, 2000, 'syncthing.php', null, function(data) {
+	gui.recall(0, 2000, 'syncthing-inotify.php', null, function(data) {
 		$('#procinfo').html(data.data);
 	});
 });
@@ -484,19 +484,19 @@ function as_change() {
 //-->
 </script>
 <!-- The Spinner Elements -->
-<?php include("ext/syncthing/spinner.inc");?>
-<script src="ext/syncthing/spin.min.js"></script>
+<?php include("ext/syncthing-inotify/spinner.inc");?>
+<script src="ext/syncthing-inotify/spin.min.js"></script>
 <!-- use: onsubmit="spinner()" within the form tag -->
 
-<form action="syncthing.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="syncthing-inotify.php" method="post" name="iform" id="iform" onsubmit="spinner()">
 <?php bindtextdomain("nas4free", "/usr/local/share/locale-stg"); ?>
     <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr><td class="tabnavtbl">
 		<ul id="tabnav">
-			<li class="tabact"><a href="syncthing.php"><span><?=gettext("Configuration");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_update.php"><span><?=gettext("Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
+			<li class="tabact"><a href="syncthing-inotify.php"><span><?=gettext("Configuration");?></span></a></li>
+			<li class="tabinact"><a href="syncthing-inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing-inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing-inotify_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
 		</ul>
 	</td></tr>
     <tr><td class="tabcont">
@@ -506,7 +506,7 @@ function as_change() {
 			<?php html_titleline($configuration['appname']." ".gettext("Information"));?>
             <?php html_text("installation_directory", gettext("Installation directory"), sprintf(gettext("The extension is installed in %s."), $configuration['rootfolder']));?>
 			<?php html_text("version", gettext("Version"), $configuration['product_version']);?>
-			<?php html_text("architecture", gettext("Architecture"), $configuration['architecture']);?>		
+			<?php html_text("architecture", gettext("Architecture"), $configuration['architecture']);?>
             <tr>
                 <td class="vncell"><?=gettext("Status");?></td>
                 <td class="vtable"><span name="procinfo" id="procinfo"></span></td>
@@ -535,15 +535,15 @@ function as_change() {
 			</tr>
 			<?php html_inputbox("port", gettext("WebUI")." ".gettext("Port"), $pconfig['port'], sprintf(gettext("Port to listen on. Only dynamic or private ports can be used (from %d through %d). Default port is %d."), 1025, 65535, 9999), true, 5);?>
             <?php html_checkbox("listen_to_all", gettext("External access"), $pconfig['listen_to_all'], gettext("Enable / disable external (Internet) access. If enabled the WebUI listens to all IP addresses (0.0.0.0) instead of the chosen interface IP address."), gettext("Default is disabled."), true);?>
-            <?php html_checkbox("gui_tls", gettext("Secure connection"), ($pconfig['gui_tls'] == "true" ? true : false), gettext("If enabled, Hypertext Transfer Protocol Secure (HTTPS) will be used for the Syncthing WebUI."), gettext("Default is enabled."), true);?>
+            <?php html_checkbox("gui_tls", gettext("Secure connection"), ($pconfig['gui_tls'] == "true" ? true : false), gettext("If enabled, Hypertext Transfer Protocol Secure (HTTPS) will be used for the Syncthing Inotify WebUI."), gettext("Default is enabled."), true);?>
             <?php html_inputbox("autoUpgradeIntervalH", gettext("Automatic upgrades"), $pconfig['autoUpgradeIntervalH'], sprintf(gettext("The number of hours to wait between each check for application upgrades (-1 = disabled, no automatic upgrades). Default is %d hours."), "-1"), false, 5);?>
-            <?php html_checkbox("resetuser", gettext("Reset WebUI user"), false, "<b><font color='#FF0000'>".gettext("Reset (delete) username and password. Use the Syncthing WebUI to define a new username and password.")."</font></b>", "", false);?>
+            <?php html_checkbox("resetuser", gettext("Reset WebUI user"), false, "<b><font color='#FF0000'>".gettext("Reset (delete) username and password. Use the Syncthing Inotify WebUI to define a new username and password.")."</font></b>", "", false);?>
 			<?php html_separator();?>
         	<?php html_titleline_checkbox("as_enable", gettext("Advanced settings"), isset($_POST['as_enable']) ? true : false, gettext("Show"), "as_change()");?>
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
 			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_checkbox("gui_enabled", "gui_enabled", ($pconfig['gui_enabled'] == "true" ? true : false), gettext("Defines if the Syncthing WebUI can be used."), gettext("Default is enabled."), false);?>
+            <?php html_checkbox("gui_enabled", "gui_enabled", ($pconfig['gui_enabled'] == "true" ? true : false), gettext("Defines if the Syncthing Inotify WebUI can be used."), gettext("Default is enabled."), false);?>
             <?php html_inputbox("listenAddress", "listenAddress", $pconfig['listenAddress'], sprintf(gettext("host:port or :port string denoting an address to listen for BEP (sync protocol) connections. Default is %s."), "0.0.0.0:22000"), false, 25);?>
             <?php html_inputbox("globalAnnounceServer", "globalAnnounceServer", $pconfig['globalAnnounceServer'], sprintf(gettext("host:port where a global announce server may be reached. Default is %s."), GLOBALASERVER), false, 60);?>
             <?php html_checkbox("globalAnnounceEnabled", "globalAnnounceEnabled", ($pconfig['globalAnnounceEnabled'] == "true" ? true : false), gettext("globalAnnounceEnabled."), gettext("Default is enabled."), false);?>
@@ -565,7 +565,7 @@ function as_change() {
             <?php html_inputbox("reconnectionIntervalS", "reconnectionIntervalS", $pconfig['reconnectionIntervalS'], sprintf(gettext("The number of seconds to wait between each attempt to connect to currently unconnected nodes. Default is %d seconds."), 60), false, 5);?>
         </table>
         <div id="remarks">
-            <?php html_remark("note", gettext("Note"), sprintf(gettext("These parameters will be added to %s."), "{$configuration['storage_path']}config.xml")." ".sprintf(gettext("Please check the <a href='%s' target='_blank'>documentation</a>."), "https://github.com/syncthing/syncthing/wiki"));?>
+            <?php html_remark("note", gettext("Note"), sprintf(gettext("These parameters will be added to %s."), "{$configuration['storage_path']}config.xml")." ".sprintf(gettext("Please check the <a href='%s' target='_blank'>documentation</a>."), "https://github.com/syncthing-inotify/syncthing-inotify/wiki"));?>
         </div>
         <div id="submit">
 			<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext("Save and Restart");?>"/>
