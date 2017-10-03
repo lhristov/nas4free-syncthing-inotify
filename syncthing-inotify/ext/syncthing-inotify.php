@@ -128,14 +128,14 @@ $pconfig['syncthing_extension_path'] = !empty($sync_conf['configuration']['optio
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
 
 function get_process_info($process = 'syncthing-inotify') {
-    if (exec('ps acx | grep {$process}')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
+    if (exec("ps acx | grep {$process}")) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
     else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
 	return ($state);
 }
 
 
 function get_syncthing_home($process = 'syncthing') {
-    if (exec('ps ax | grep {$process}', $out) && is_array($out)) { // syncthing is running
+    if (exec("ps ax | grep {$process}", $out) && is_array($out)) { // syncthing is running
         preg_match_all('/-home ([^$ ]*)/', implode("\n", $out), $matches, PREG_SET_ORDER, 0);
         if(isset($matches[0]) && isset($matches[0][1])) {
             echo $matches[0][1];
@@ -215,7 +215,7 @@ function as_change() {
 			<li class="tabact"><a href="syncthing-inotify.php"><span><?=gettext("Configuration");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_inotify_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
 		</ul>
 	</td></tr>
     <tr><td class="tabcont">
