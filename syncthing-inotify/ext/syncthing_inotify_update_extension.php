@@ -123,7 +123,7 @@ if (isset($_POST['ext_remove']) && $_POST['ext_remove']) {
 if (isset($_POST['ext_update']) && $_POST['ext_update']) {
     $install_dir = dirname($configuration['rootfolder']);
 // download installer
-    $return_val = mwexec("fetch -vo {$install_dir}/stg-install.php https://raw.githubusercontent.com/lhristov/nas4free-syncthing-inotify/master/syncthing-inotify/stg-install.php", true);
+    $return_val = mwexec("fetch -vo {$install_dir}/stg-install.php https://raw.githubusercontent.com/lhristov/nas4free-syncthing-inotify/master/stg-install.php", true);
     if ($return_val == 0) {
         require_once("{$install_dir}/stg-install.php");
         header("Refresh:8");;

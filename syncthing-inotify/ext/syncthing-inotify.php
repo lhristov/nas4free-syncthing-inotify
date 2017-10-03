@@ -88,10 +88,6 @@ if (isset($_POST['save']) && $_POST['save']) {
 		if (isset($_POST['enable'])) {
             $configuration['enable'] = isset($_POST['enable']);
             $configuration['who'] = $_POST['who'];
-            $configuration['listen_to_all'] = isset($_POST['listen_to_all']);
-            $configuration['if'] = $_POST['if'];
-            $configuration['ipaddr'] = get_ipaddr($_POST['if']);
-            $configuration['port'] = $_POST['port'];
             if ($configuration['storage_path'] !== $_POST['storage_path']) {
                 if (is_file("{$configuration['storage_path']}config.xml") && !is_file("{$_POST['storage_path']}config.xml")) {
                     mwexec("cp -v {$configuration['storage_path']}config.xml {$_POST['storage_path']}config.xml", true);
@@ -113,33 +109,9 @@ if (isset($_POST['save']) && $_POST['save']) {
                 unset($sync_conf['configuration']['gui']['user']);
                 unset($sync_conf['configuration']['gui']['password']);
             }
-            $sync_conf['configuration']['options']['autoUpgradeIntervalH'] = (isset($_POST['autoUpgradeIntervalH']) && ($_POST['autoUpgradeIntervalH'] > 0)) ? $_POST['autoUpgradeIntervalH'] : "-1";
-            $sync_conf['configuration']['options']['startBrowser'] = isset($_POST['startBrowser']) ? true : false;
-            $sync_conf['configuration']['options']['listenAddress'] = !empty($_POST['listenAddress']) ? $_POST['listenAddress'] : "0.0.0.0:22000";
-            $sync_conf['configuration']['options']['globalAnnounceServer'] = !empty($_POST['globalAnnounceServer']) ? $_POST['globalAnnounceServer'] : GLOBALASERVER;
-            $sync_conf['configuration']['options']['globalAnnounceEnabled'] = isset($_POST['globalAnnounceEnabled']) ? true : false;
-            $sync_conf['configuration']['options']['localAnnounceEnabled'] = isset($_POST['localAnnounceEnabled']) ? true : false;
-            $sync_conf['configuration']['options']['localAnnouncePort'] = !empty($_POST['localAnnouncePort']) ? $_POST['localAnnouncePort'] : "21025";
-            $sync_conf['configuration']['options']['localAnnounceMCAddr'] = !empty($_POST['localAnnounceMCAddr']) ? $_POST['localAnnounceMCAddr'] : "[ff32::5222]:21026";
-            $sync_conf['configuration']['options']['maxSendKbps'] = !empty($_POST['maxSendKbps']) ? $_POST['maxSendKbps'] : "0";
-            $sync_conf['configuration']['options']['maxRecvKbps'] = !empty($_POST['maxRecvKbps']) ? $_POST['maxRecvKbps'] : "0";
-            $sync_conf['configuration']['options']['maxChangeKbps'] = !empty($_POST['maxChangeKbps']) ? $_POST['maxChangeKbps'] : "10000";
-            $sync_conf['configuration']['options']['upnpEnabled'] = isset($_POST['upnpEnabled']) ? true : false;
-            $sync_conf['configuration']['options']['upnpLeaseMinutes'] = !empty($_POST['upnpLeaseMinutes']) ? $_POST['upnpLeaseMinutes'] : "0";
-            $sync_conf['configuration']['options']['upnpRenewalMinutes'] = !empty($_POST['upnpRenewalMinutes']) ? $_POST['upnpRenewalMinutes'] : "30";
-            $sync_conf['configuration']['options']['urAccepted'] = !empty($_POST['urAccepted']) ? $_POST['urAccepted'] : "0";
-            $sync_conf['configuration']['options']['restartOnWakeup'] = isset($_POST['restartOnWakeup']) ? true : false;
-            $sync_conf['configuration']['options']['keepTemporariesH'] = !empty($_POST['keepTemporariesH']) ? $_POST['keepTemporariesH'] : "24";
-            $sync_conf['configuration']['options']['cacheIgnoredFiles'] = isset($_POST['cacheIgnoredFiles']) ? true : false;
-            $sync_conf['configuration']['options']['parallelRequests'] = !empty($_POST['parallelRequests']) ? $_POST['parallelRequests'] : "16";
-            $sync_conf['configuration']['options']['rescanIntervalS'] = !empty($_POST['rescanIntervalS']) ? $_POST['rescanIntervalS'] : "60";
-            $sync_conf['configuration']['options']['reconnectionIntervalS'] = !empty($_POST['reconnectionIntervalS']) ? $_POST['reconnectionIntervalS'] : "60";
+            $sync_conf['configuration']['options']['api_key'] = !empty($_POST['api_key']) ? $_POST['api_key'] : "";
 
     		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify -home {$configuration['storage_path']} -logflags=3 > {$configuration['storage_path']}syncthing-inotify.log & '";
-
-            $xmlout = Array2XML::createXML('configuration', $sync_conf['configuration']);
-            $xmlout = $xmlout->saveXML();
-            file_put_contents($configuration['storage_path']."config.xml", $xmlout);
 
             exec("killall syncthing-inotify");
             $return_val = 0;
@@ -147,163 +119,11 @@ if (isset($_POST['save']) && $_POST['save']) {
             unset ($output);
             exec($configuration['command'], $output, $return_val);
             if ($return_val != 0) { $input_errors = $output; }
-            if ($configuration['enable_schedule']) {  // if cronjobs exists -> activate
-                $cronjob = array();
-				if (!is_array($config['cron'])) $config['cron'] = [];
-                $a_cronjob = &$config['cron']['job'];
-                $uuid = isset($configuration['schedule_uuid_startup']) ? $configuration['schedule_uuid_startup'] : false;
-                if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
-                	$cronjob['enable'] = true;
-                	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-                	$cronjob['desc'] = $a_cronjob[$cnid]['desc'];
-                	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
-                	$cronjob['hour'] = $configuration['schedule_startup'];
-                	$cronjob['day'] = $a_cronjob[$cnid]['day'];
-                	$cronjob['month'] = $a_cronjob[$cnid]['month'];
-                	$cronjob['weekday'] = $a_cronjob[$cnid]['weekday'];
-                	$cronjob['all_mins'] = $a_cronjob[$cnid]['all_mins'];
-                	$cronjob['all_hours'] = $a_cronjob[$cnid]['all_hours'];
-                	$cronjob['all_days'] = $a_cronjob[$cnid]['all_days'];
-                	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
-                	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
-                	$cronjob['who'] = $a_cronjob[$cnid]['who'];
-                	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                }
-                if (isset($uuid) && (FALSE !== $cnid)) {
-                		$a_cronjob[$cnid] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_MODIFIED;
-                	} else {
-                		$a_cronjob[] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_NEW;
-                	}
-                updatenotify_set("cronjob", $mode, $cronjob['uuid']);
-
-                unset ($cronjob);
-                $cronjob = array();
-				if (!is_array($config['cron'])) $config['cron'] = [];
-                $a_cronjob = &$config['cron']['job'];
-                $uuid = isset($configuration['schedule_uuid_closedown']) ? $configuration['schedule_uuid_closedown'] : false;
-                if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
-                	$cronjob['enable'] = true;
-                	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-                	$cronjob['desc'] = $a_cronjob[$cnid]['desc'];
-                	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
-                	$cronjob['hour'] = $configuration['schedule_closedown'];
-                	$cronjob['day'] = $a_cronjob[$cnid]['day'];
-                	$cronjob['month'] = $a_cronjob[$cnid]['month'];
-                	$cronjob['weekday'] = $a_cronjob[$cnid]['weekday'];
-                	$cronjob['all_mins'] = $a_cronjob[$cnid]['all_mins'];
-                	$cronjob['all_hours'] = $a_cronjob[$cnid]['all_hours'];
-                	$cronjob['all_days'] = $a_cronjob[$cnid]['all_days'];
-                	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
-                	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
-                	$cronjob['who'] = $a_cronjob[$cnid]['who'];
-                	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                }
-                if (isset($uuid) && (FALSE !== $cnid)) {
-                		$a_cronjob[$cnid] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_MODIFIED;
-                	} else {
-                		$a_cronjob[] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_NEW;
-                	}
-                updatenotify_set("cronjob", $mode, $cronjob['uuid']);
-                write_config();
-                header("Location: syncthing-inotify.php");
-
-        		$retval = 0;
-        		if (!file_exists($d_sysrebootreqd_path)) {
-        			$retval |= updatenotify_process("cronjob", "cronjob_process_updatenotification");
-        			config_lock();
-        			$retval |= rc_update_service("cron");
-        			config_unlock();
-        		}
-        		$savemsg = get_std_save_message($retval);
-        		if ($retval == 0) {
-        			updatenotify_delete("cronjob");
-        		}
-            }   // end of activate cronjobs
 			ext_save_config($config_file, $configuration);
         }   // end of enable extension
 		else {
             exec("killall syncthing-inotify"); $savemsg = $savemsg." ".$configuration['appname'].gettext(" is now disabled!");
             $configuration['enable'] = isset($_POST['enable']);
-            if ($configuration['enable_schedule']) {  // if cronjobs exists -> deactivate
-                $cronjob = array();
-				if (!is_array($config['cron'])) $config['cron'] = [];
-                $a_cronjob = &$config['cron']['job'];
-                $uuid = isset($configuration['schedule_uuid_startup']) ? $configuration['schedule_uuid_startup'] : false;
-                if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
-                	$cronjob['enable'] = false;
-                	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-                	$cronjob['desc'] = $a_cronjob[$cnid]['desc'];
-                	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
-                	$cronjob['hour'] = $configuration['schedule_startup'];
-                	$cronjob['day'] = $a_cronjob[$cnid]['day'];
-                	$cronjob['month'] = $a_cronjob[$cnid]['month'];
-                	$cronjob['weekday'] = $a_cronjob[$cnid]['weekday'];
-                	$cronjob['all_mins'] = $a_cronjob[$cnid]['all_mins'];
-                	$cronjob['all_hours'] = $a_cronjob[$cnid]['all_hours'];
-                	$cronjob['all_days'] = $a_cronjob[$cnid]['all_days'];
-                	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
-                	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
-                	$cronjob['who'] = $a_cronjob[$cnid]['who'];
-                	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                }
-                if (isset($uuid) && (FALSE !== $cnid)) {
-                		$a_cronjob[$cnid] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_MODIFIED;
-                	} else {
-                		$a_cronjob[] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_NEW;
-                	}
-                updatenotify_set("cronjob", $mode, $cronjob['uuid']);
-
-                unset ($cronjob);
-                $cronjob = array();
-				if (!is_array($config['cron'])) $config['cron'] = [];
-                $a_cronjob = &$config['cron']['job'];
-                $uuid = isset($configuration['schedule_uuid_closedown']) ? $configuration['schedule_uuid_closedown'] : false;
-                if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
-                	$cronjob['enable'] = false;
-                	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-                	$cronjob['desc'] = $a_cronjob[$cnid]['desc'];
-                	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
-                	$cronjob['hour'] = $configuration['schedule_closedown'];
-                	$cronjob['day'] = $a_cronjob[$cnid]['day'];
-                	$cronjob['month'] = $a_cronjob[$cnid]['month'];
-                	$cronjob['weekday'] = $a_cronjob[$cnid]['weekday'];
-                	$cronjob['all_mins'] = $a_cronjob[$cnid]['all_mins'];
-                	$cronjob['all_hours'] = $a_cronjob[$cnid]['all_hours'];
-                	$cronjob['all_days'] = $a_cronjob[$cnid]['all_days'];
-                	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
-                	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
-                	$cronjob['who'] = $a_cronjob[$cnid]['who'];
-                	$cronjob['command'] = $a_cronjob[$cnid]['command'];
-                }
-                if (isset($uuid) && (FALSE !== $cnid)) {
-                		$a_cronjob[$cnid] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_MODIFIED;
-                	} else {
-                		$a_cronjob[] = $cronjob;
-                		$mode = UPDATENOTIFY_MODE_NEW;
-                	}
-                updatenotify_set("cronjob", $mode, $cronjob['uuid']);
-                write_config();
-                header("Location: syncthing-inotify.php");
-
-        		$retval = 0;
-        		if (!file_exists($d_sysrebootreqd_path)) {
-        			$retval |= updatenotify_process("cronjob", "cronjob_process_updatenotification");
-        			config_lock();
-        			$retval |= rc_update_service("cron");
-        			config_unlock();
-        		}
-        		$savemsg = get_std_save_message($retval);
-        		if ($retval == 0) {
-        			updatenotify_delete("cronjob");
-        		}
-            }   // end of deactivate cronjobs
 			ext_save_config($config_file, $configuration);
         }   // end of disable extension
     }   // end of empty input_errors
@@ -312,57 +132,8 @@ if (isset($_POST['save']) && $_POST['save']) {
 $pconfig['enable'] = $configuration['enable'];
 $pconfig['who'] = !empty($configuration['who']) ? $configuration['who'] : "";
 $pconfig['if'] = !empty($configuration['if']) ? $configuration['if'] : "";
-$pconfig['ipaddr'] = !empty($configuration['ipaddr']) ? $configuration['ipaddr'] : "";
-$pconfig['port'] = !empty($configuration['port']) ? $configuration['port'] : "9999";
-$pconfig['listen_to_all'] = $configuration['listen_to_all'];
 $pconfig['storage_path'] = !empty($configuration['storage_path']) ? $configuration['storage_path'] : $configuration['rootfolder']."config/";
-if (is_file($configuration['storage_path']."config.xml")) { $sync_conf = XML2Array::createArray(file_get_contents($configuration['storage_path']."config.xml")); }
-$pconfig['gui_enabled'] = isset($sync_conf['configuration']['gui']['@attributes']['enabled']) ? $sync_conf['configuration']['gui']['@attributes']['enabled'] : "true";
-$pconfig['gui_tls'] = isset($sync_conf['configuration']['gui']['@attributes']['tls']) ? $sync_conf['configuration']['gui']['@attributes']['tls'] : "true";
-$pconfig['address'] = !empty($sync_conf['configuration']['gui']['address']) ? $sync_conf['configuration']['gui']['address'] : "{$pconfig['ipaddr']}:{$pconfig['port']}";
-$pconfig['autoUpgradeIntervalH'] = (isset($sync_conf['configuration']['options']['autoUpgradeIntervalH']) && ($sync_conf['configuration']['options']['autoUpgradeIntervalH'] > 0)) ? $sync_conf['configuration']['options']['autoUpgradeIntervalH'] : "-1";
-$pconfig['startBrowser'] = isset($sync_conf['configuration']['options']['startBrowser']) ? $sync_conf['configuration']['options']['startBrowser'] : "false";
-$pconfig['listenAddress'] = !empty($sync_conf['configuration']['options']['listenAddress']) ? $sync_conf['configuration']['options']['listenAddress'] : "0.0.0.0:22000";
-$pconfig['globalAnnounceServer'] = !empty($sync_conf['configuration']['options']['globalAnnounceServer']) ? $sync_conf['configuration']['options']['globalAnnounceServer'] : GLOBALASERVER;
-$pconfig['globalAnnounceEnabled'] = isset($sync_conf['configuration']['options']['globalAnnounceEnabled']) ? $sync_conf['configuration']['options']['globalAnnounceEnabled'] : "true";
-$pconfig['localAnnounceEnabled'] = isset($sync_conf['configuration']['options']['localAnnounceEnabled']) ? $sync_conf['configuration']['options']['localAnnounceEnabled'] : "true";
-$pconfig['localAnnouncePort'] = !empty($sync_conf['configuration']['options']['localAnnouncePort']) ? $sync_conf['configuration']['options']['localAnnouncePort'] : "21025";
-$pconfig['localAnnounceMCAddr'] = !empty($sync_conf['configuration']['options']['localAnnounceMCAddr']) ? $sync_conf['configuration']['options']['localAnnounceMCAddr'] : "[ff32::5222]:21026";
-$pconfig['maxSendKbps'] = !empty($sync_conf['configuration']['options']['maxSendKbps']) ? $sync_conf['configuration']['options']['maxSendKbps'] : "0";
-$pconfig['maxRecvKbps'] = !empty($sync_conf['configuration']['options']['maxRecvKbps']) ? $sync_conf['configuration']['options']['maxRecvKbps'] : "0";
-$pconfig['maxChangeKbps'] = !empty($sync_conf['configuration']['options']['maxChangeKbps']) ? $sync_conf['configuration']['options']['maxChangeKbps'] : "10000";
-$pconfig['upnpEnabled'] = isset($sync_conf['configuration']['options']['upnpEnabled']) ? $sync_conf['configuration']['options']['upnpEnabled'] : "true";
-$pconfig['upnpLeaseMinutes'] = !empty($sync_conf['configuration']['options']['upnpLeaseMinutes']) ? $sync_conf['configuration']['options']['upnpLeaseMinutes'] : "0";
-$pconfig['upnpRenewalMinutes'] = !empty($sync_conf['configuration']['options']['upnpRenewalMinutes']) ? $sync_conf['configuration']['options']['upnpRenewalMinutes'] : "30";
-$pconfig['urAccepted'] = !empty($sync_conf['configuration']['options']['urAccepted']) ? $sync_conf['configuration']['options']['urAccepted'] : "0";
-$pconfig['restartOnWakeup'] = isset($sync_conf['configuration']['options']['restartOnWakeup']) ? $sync_conf['configuration']['options']['restartOnWakeup'] : "false";
-$pconfig['keepTemporariesH'] = !empty($sync_conf['configuration']['options']['keepTemporariesH']) ? $sync_conf['configuration']['options']['keepTemporariesH'] : "24";
-$pconfig['cacheIgnoredFiles'] = isset($sync_conf['configuration']['options']['cacheIgnoredFiles']) ? $sync_conf['configuration']['options']['cacheIgnoredFiles'] : "true";
-$pconfig['parallelRequests'] = !empty($sync_conf['configuration']['options']['parallelRequests']) ? $sync_conf['configuration']['options']['parallelRequests'] : "16";
-$pconfig['rescanIntervalS'] = !empty($sync_conf['configuration']['options']['rescanIntervalS']) ? $sync_conf['configuration']['options']['rescanIntervalS'] : "60";
-$pconfig['reconnectionIntervalS'] = !empty($sync_conf['configuration']['options']['reconnectionIntervalS']) ? $sync_conf['configuration']['options']['reconnectionIntervalS'] : "60";
-
-// check for default globalAnnounceServer from older STG versions < v0.10.15 and eventually change to udp format
-$v = explode(" ", stg_call("syncthing-inotify -version"));
-$strarray = array("v0.", ".");
-$vstr = str_replace($strarray, "", $v[1]);
-if (($pconfig['globalAnnounceServer'] == "announce.syncthing-inotify.net:22025") && ($vstr >= 1015)) { $pconfig['globalAnnounceServer'] = GLOBALASERVER; }
-
-$a_interface = get_interface_list();
-// Add VLAN interfaces (from user Vasily1)
-if (isset($config['vinterfaces']['vlan']) && is_array($config['vinterfaces']['vlan']) && count($config['vinterfaces']['vlan'])) {
-   foreach ($config['vinterfaces']['vlan'] as $vlanv) {
-      $a_interface[$vlanv['if']] = $vlanv;
-      $a_interface[$vlanv['if']]['isvirtual'] = true;
-   }
-}
-// Add LAGG interfaces (from user Vasily1)
-if (isset($config['vinterfaces']['lagg']) && is_array($config['vinterfaces']['lagg']) && count($config['vinterfaces']['lagg'])) {
-   foreach ($config['vinterfaces']['lagg'] as $laggv) {
-      $a_interface[$laggv['if']] = $laggv;
-      $a_interface[$laggv['if']]['isvirtual'] = true;
-   }
-}
+$pconfig['api_key'] = !empty($sync_conf['configuration']['options']['api_key']) ? $sync_conf['configuration']['options']['api_key'] : "";
 
 // Use first interface as default if it is not set.
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
@@ -396,34 +167,12 @@ $(document).ready(function(){
 function enable_change(enable_change) {
 	var endis = !(document.iform.enable.checked || enable_change);
 	document.iform.xif.disabled = endis;
-	document.iform.port.disabled = endis;
-	document.iform.listen_to_all.disabled = endis;
-	document.iform.gui_tls.disabled = endis;
 	document.iform.autoUpgradeIntervalH.disabled = endis;
 	document.iform.resetuser.disabled = endis;
 	document.iform.who.disabled = endis;
 	document.iform.storage_path.disabled = endis;
 	document.iform.storage_pathbrowsebtn.disabled = endis;
 	document.iform.gui_enabled.disabled = endis;
-	document.iform.listenAddress.disabled = endis;
-	document.iform.globalAnnounceServer.disabled = endis;
-	document.iform.globalAnnounceEnabled.disabled = endis;
-	document.iform.localAnnounceEnabled.disabled = endis;
-	document.iform.localAnnouncePort.disabled = endis;
-	document.iform.localAnnounceMCAddr.disabled = endis;
-	document.iform.maxSendKbps.disabled = endis;
-	document.iform.maxRecvKbps.disabled = endis;
-	document.iform.maxChangeKbps.disabled = endis;
-	document.iform.upnpEnabled.disabled = endis;
-	document.iform.upnpLeaseMinutes.disabled = endis;
-	document.iform.upnpRenewalMinutes.disabled = endis;
-	document.iform.urAccepted.disabled = endis;
-	document.iform.restartOnWakeup.disabled = endis;
-	document.iform.keepTemporariesH.disabled = endis;
-	document.iform.cacheIgnoredFiles.disabled = endis;
-	document.iform.parallelRequests.disabled = endis;
-	document.iform.rescanIntervalS.disabled = endis;
-	document.iform.reconnectionIntervalS.disabled = endis;
 }
 
 function as_change() {
@@ -433,25 +182,7 @@ function as_change() {
 			showElementById('xif_tr','hide');
 			showElementById('storage_path_tr','hide');
 			showElementById('gui_enabled_tr','hide');
-			showElementById('listenAddress_tr','hide');
-			showElementById('globalAnnounceServer_tr','hide');
-			showElementById('globalAnnounceEnabled_tr','hide');
-			showElementById('localAnnounceEnabled_tr','hide');
-			showElementById('localAnnouncePort_tr','hide');
-			showElementById('localAnnounceMCAddr_tr','hide');
-			showElementById('maxSendKbps_tr','hide');
-			showElementById('maxRecvKbps_tr','hide');
-			showElementById('maxChangeKbps_tr','hide');
-			showElementById('upnpEnabled_tr','hide');
-			showElementById('upnpLeaseMinutes_tr','hide');
-			showElementById('upnpRenewalMinutes_tr','hide');
-			showElementById('urAccepted_tr','hide');
-			showElementById('restartOnWakeup_tr','hide');
-			showElementById('keepTemporariesH_tr','hide');
-			showElementById('cacheIgnoredFiles_tr','hide');
-			showElementById('parallelRequests_tr','hide');
-			showElementById('rescanIntervalS_tr','hide');
-			showElementById('reconnectionIntervalS_tr','hide');
+			showElementById('api_key_tr','hide');
 			break;
 
 		case true:
@@ -459,25 +190,7 @@ function as_change() {
 			showElementById('xif_tr','show');
 			showElementById('storage_path_tr','show');
 			showElementById('gui_enabled_tr','show');
-			showElementById('listenAddress_tr','show');
-			showElementById('globalAnnounceServer_tr','show');
-			showElementById('globalAnnounceEnabled_tr','show');
-			showElementById('localAnnounceEnabled_tr','show');
-			showElementById('localAnnouncePort_tr','show');
-			showElementById('localAnnounceMCAddr_tr','show');
-			showElementById('maxSendKbps_tr','show');
-			showElementById('maxRecvKbps_tr','show');
-			showElementById('maxChangeKbps_tr','show');
-			showElementById('upnpEnabled_tr','show');
-			showElementById('upnpLeaseMinutes_tr','show');
-			showElementById('upnpRenewalMinutes_tr','show');
-			showElementById('urAccepted_tr','show');
-			showElementById('restartOnWakeup_tr','show');
-			showElementById('keepTemporariesH_tr','show');
-			showElementById('cacheIgnoredFiles_tr','show');
-			showElementById('parallelRequests_tr','show');
-			showElementById('rescanIntervalS_tr','show');
-			showElementById('reconnectionIntervalS_tr','show');
+			showElementById('api_key_tr','show');
 			break;
 	}
 }
@@ -523,7 +236,7 @@ function as_change() {
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
 			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 5);?>
+            <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 60);?>
         </table>
         <div id="submit">
 			<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext("Save and Restart");?>"/>
