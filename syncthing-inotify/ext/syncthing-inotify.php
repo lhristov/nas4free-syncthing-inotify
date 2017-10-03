@@ -494,9 +494,9 @@ function as_change() {
 	<tr><td class="tabnavtbl">
 		<ul id="tabnav">
 			<li class="tabact"><a href="syncthing-inotify.php"><span><?=gettext("Configuration");?></span></a></li>
-			<li class="tabinact"><a href="syncthing-inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing-inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing-inotify_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
 		</ul>
 	</td></tr>
     <tr><td class="tabcont">
