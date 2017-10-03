@@ -138,7 +138,7 @@ function get_syncthing_home($process = 'syncthing') {
     if (exec("ps ax | grep {$process}", $out) && is_array($out)) { // syncthing is running
         preg_match_all('/-home ([^$ ]*)/', implode("\n", $out), $matches, PREG_SET_ORDER, 0);
         if(isset($matches[0]) && isset($matches[0][1])) {
-            echo $matches[0][1];
+            return $matches[0][1];
         }
     } else {
         return "";
@@ -148,8 +148,7 @@ function get_syncthing_home($process = 'syncthing') {
 if (is_ajax()) {
 	$procinfo = get_process_info();
     $syncthinginfo = get_process_info('syncthing');
-	render_ajax($procinfo);
-    render_ajax($syncthinginfo);
+	render_ajax(array('procinfo' => $procinfo, 'syncthinginfo' => $syncthinginfo));
 }
 
 if (($message = ext_check_version("{$configuration['rootfolder']}version_server.txt", "syncthing-inotify", $configuration['version'], gettext("Extension Maintenance"))) !== false) $savemsg .= $message;
@@ -160,8 +159,8 @@ include("fbegin.inc");?>
 $(document).ready(function(){
 	var gui = new GUI;
 	gui.recall(0, 2000, 'syncthing-inotify.php', null, function(data) {
-		$('#procinfo').html(data.data);
-        $('#syncthinginfo').html(data.data);
+		$('#procinfo').html(data.data.procinfo);
+        $('#syncthinginfo').html(data.data.syncthinginfo);
 	});
 });
 //]]>
@@ -227,11 +226,11 @@ function as_change() {
 			<?php html_text("version", gettext("Version"), $configuration['product_version']);?>
 			<?php html_text("architecture", gettext("Architecture"), $configuration['architecture']);?>
             <tr>
-                <td class="vncell"><?=gettext("Status");?></td>
+                <td class="vncell"><?=gettext("Inotify status");?></td>
                 <td class="vtable"><span name="procinfo" id="procinfo"></span></td>
             </tr>
             <tr>
-                <td class="vncell"><?=gettext("Status");?></td>
+                <td class="vncell"><?=gettext("SyncThing Status");?></td>
                 <td class="vtable"><span name="syncthinginfo" id="syncthinginfo"></span></td>
             </tr>
 			<?php html_separator();?>
@@ -239,7 +238,7 @@ function as_change() {
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
 			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_inputbox("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'], gettext("Synchthing Config Path."), false, 60);?>
+            <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'], $g['media_path'], false, 60);?>
             <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 60);?>
         </table>
         <div id="submit">
