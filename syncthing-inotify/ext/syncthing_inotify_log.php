@@ -38,8 +38,8 @@ if (empty($log))
 
 bindtextdomain("nas4free", "/usr/local/share/locale-stg");
 
-$config_file = "ext/syncthing/syncthing-inotify.conf";
-require_once("ext/syncthing/extension-lib.inc");
+$config_file = "ext/syncthing-inotify/syncthing-inotify.conf";
+require_once("ext/syncthing-inotify/extension-lib.inc");
 if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing-inotify.conf");
 if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
 
@@ -78,8 +78,8 @@ function log_change() {
 //-->
 </script>
 <!-- The Spinner Elements -->
-<?php include("ext/syncthing/spinner.inc");?>
-<script src="ext/syncthing/spin.min.js"></script>
+<?php include("ext/syncthing-inotify/spinner.inc");?>
+<script src="ext/syncthing-inotify/spin.min.js"></script>
 <!-- use: onsubmit="spinner()" within the form tag -->
 
 <form action="syncthing_inotify_log.php" method="post" name="iform" id="iform" onsubmit="spinner()">
