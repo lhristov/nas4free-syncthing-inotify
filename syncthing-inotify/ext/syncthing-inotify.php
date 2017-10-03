@@ -520,53 +520,11 @@ function as_change() {
             ?>
 			<?php html_separator();?>
         	<?php html_titleline_checkbox("enable", $configuration['appname'], $pconfig['enable'], gettext("Enable"), "enable_change(false)");?>
-			<tr>
-				<td valign="top" class="vncellreq"><?=gettext("Interface selection");?></td>
-				<td class="vtable">
-				<select name="if" class="formfld" id="xif">
-					<?php foreach($a_interface as $if => $ifinfo):?>
-						<?php $ifinfo = get_interface_info($if); if (("up" == $ifinfo['status']) || ("associated" == $ifinfo['status'])):?>
-						<option value="<?=$if;?>"<?php if ($if == $pconfig['if']) echo "selected=\"selected\"";?>><?=$if?></option>
-						<?php endif;?>
-					<?php endforeach;?>
-				</select>
-				<br /><?=gettext("Select which interface to use (only selectable if your server has more than one).");?>
-				</td>
-			</tr>
-			<?php html_inputbox("port", gettext("WebUI")." ".gettext("Port"), $pconfig['port'], sprintf(gettext("Port to listen on. Only dynamic or private ports can be used (from %d through %d). Default port is %d."), 1025, 65535, 9999), true, 5);?>
-            <?php html_checkbox("listen_to_all", gettext("External access"), $pconfig['listen_to_all'], gettext("Enable / disable external (Internet) access. If enabled the WebUI listens to all IP addresses (0.0.0.0) instead of the chosen interface IP address."), gettext("Default is disabled."), true);?>
-            <?php html_checkbox("gui_tls", gettext("Secure connection"), ($pconfig['gui_tls'] == "true" ? true : false), gettext("If enabled, Hypertext Transfer Protocol Secure (HTTPS) will be used for the Syncthing Inotify WebUI."), gettext("Default is enabled."), true);?>
-            <?php html_inputbox("autoUpgradeIntervalH", gettext("Automatic upgrades"), $pconfig['autoUpgradeIntervalH'], sprintf(gettext("The number of hours to wait between each check for application upgrades (-1 = disabled, no automatic upgrades). Default is %d hours."), "-1"), false, 5);?>
-            <?php html_checkbox("resetuser", gettext("Reset WebUI user"), false, "<b><font color='#FF0000'>".gettext("Reset (delete) username and password. Use the Syncthing Inotify WebUI to define a new username and password.")."</font></b>", "", false);?>
-			<?php html_separator();?>
-        	<?php html_titleline_checkbox("as_enable", gettext("Advanced settings"), isset($_POST['as_enable']) ? true : false, gettext("Show"), "as_change()");?>
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
 			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_checkbox("gui_enabled", "gui_enabled", ($pconfig['gui_enabled'] == "true" ? true : false), gettext("Defines if the Syncthing Inotify WebUI can be used."), gettext("Default is enabled."), false);?>
-            <?php html_inputbox("listenAddress", "listenAddress", $pconfig['listenAddress'], sprintf(gettext("host:port or :port string denoting an address to listen for BEP (sync protocol) connections. Default is %s."), "0.0.0.0:22000"), false, 25);?>
-            <?php html_inputbox("globalAnnounceServer", "globalAnnounceServer", $pconfig['globalAnnounceServer'], sprintf(gettext("host:port where a global announce server may be reached. Default is %s."), GLOBALASERVER), false, 60);?>
-            <?php html_checkbox("globalAnnounceEnabled", "globalAnnounceEnabled", ($pconfig['globalAnnounceEnabled'] == "true" ? true : false), gettext("globalAnnounceEnabled."), gettext("Default is enabled."), false);?>
-            <?php html_checkbox("localAnnounceEnabled", "localAnnounceEnabled", ($pconfig['localAnnounceEnabled'] == "true" ? true : false), gettext("localAnnounceEnabled."), gettext("Default is enabled."), false);?>
-            <?php html_inputbox("localAnnouncePort", "localAnnouncePort", $pconfig['localAnnouncePort'], sprintf(gettext("localAnnouncePort. Default is %d."), 21025), false, 5);?>
-            <?php html_inputbox("localAnnounceMCAddr", "localAnnounceMCAddr", $pconfig['localAnnounceMCAddr'], sprintf(gettext("localAnnounceMCAddr. Default is %s."), "[ff32::5222]:21026"), false, 25);?>
-            <?php html_inputbox("maxRecvKbps", "maxRecvKbps", $pconfig['maxRecvKbps'], sprintf(gettext("Incoming rate limit. Default is %d kbps (unlimited)."), 0), false, 5);?>
-            <?php html_inputbox("maxSendKbps", "maxSendKbps", $pconfig['maxSendKbps'], sprintf(gettext("Outgoing rate limit. Default is %d kbps (unlimited)."), 0), false, 5);?>
-            <?php html_inputbox("maxChangeKbps", "maxChangeKbps", $pconfig['maxChangeKbps'], sprintf(gettext("The maximum rate of change allowed for a single file. When this rate is exceeded, further changes to the file are not announced, until the rate is reduced below the limit. Default is %d kbps."), 10000), false, 5);?>
-            <?php html_checkbox("upnpEnabled", "upnpEnabled", ($pconfig['upnpEnabled'] == "true" ? true : false), gettext("upnpEnabled."), gettext("Default is enabled."), false);?>
-            <?php html_inputbox("upnpLeaseMinutes", "upnpLeaseMinutes", $pconfig['upnpLeaseMinutes'], sprintf(gettext("upnpLeaseMinutes. Default is %d minutes."), 0), false, 5);?>
-            <?php html_inputbox("upnpRenewalMinutes", "upnpRenewalMinutes", $pconfig['upnpRenewalMinutes'], sprintf(gettext("upnpRenewalMinutes. Default is %d minutes."), 30), false, 5);?>
-            <?php html_inputbox("urAccepted", "urAccepted", $pconfig['urAccepted'], sprintf(gettext("Whether the user has accepted to submit anonymous usage data. The default, 0, mean the user has not made a choice, and syncthing will ask at some point in the future. -1 means no, 1 means yes. Default is %d."), 0), false, 5);?>
-            <?php html_checkbox("restartOnWakeup", "restartOnWakeup", ($pconfig['restartOnWakeup'] == "true" ? true : false), gettext("restartOnWakeup."), gettext("Default is disabled."), false);?>
-            <?php html_inputbox("keepTemporariesH", "keepTemporariesH", $pconfig['keepTemporariesH'], sprintf(gettext("keepTemporariesH. Default is %d hours."), 24), false, 5);?>
-            <?php html_checkbox("cacheIgnoredFiles", "cacheIgnoredFiles", ($pconfig['cacheIgnoredFiles'] == "true" ? true : false), gettext("cacheIgnoredFiles."), gettext("Default is enabled."), false);?>
-            <?php html_inputbox("parallelRequests", "parallelRequests", $pconfig['parallelRequests'], sprintf(gettext("The maximum number of outstanding block requests to have against any given peer. Default is %d."), 16), false, 5);?>
-            <?php html_inputbox("rescanIntervalS", "rescanIntervalS", $pconfig['rescanIntervalS'], sprintf(gettext("The number of seconds to wait between each scan for modification of the local repositories. Default is %d seconds."), 60), false, 5);?>
-            <?php html_inputbox("reconnectionIntervalS", "reconnectionIntervalS", $pconfig['reconnectionIntervalS'], sprintf(gettext("The number of seconds to wait between each attempt to connect to currently unconnected nodes. Default is %d seconds."), 60), false, 5);?>
+            <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 5);?>
         </table>
-        <div id="remarks">
-            <?php html_remark("note", gettext("Note"), sprintf(gettext("These parameters will be added to %s."), "{$configuration['storage_path']}config.xml")." ".sprintf(gettext("Please check the <a href='%s' target='_blank'>documentation</a>."), "https://github.com/syncthing-inotify/syncthing-inotify/wiki"));?>
-        </div>
         <div id="submit">
 			<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext("Save and Restart");?>"/>
         </div>
