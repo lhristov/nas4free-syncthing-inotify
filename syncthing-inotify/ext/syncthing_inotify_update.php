@@ -1,7 +1,7 @@
 <?php
 /*
-    syncthing_update.php
-    
+    syncthing_inotify_update.php
+
     Copyright (c) 2013 - 2017 Andreas Schmidhuber <info@a3s.at>
     All rights reserved.
 
@@ -30,9 +30,9 @@ require("guiconfig.inc");
 
 bindtextdomain("nas4free", "/usr/local/share/locale-stg");
 
-$config_file = "ext/syncthing/syncthing.conf";
+$config_file = "ext/syncthing/syncthing-inotify.conf";
 require_once("ext/syncthing/extension-lib.inc");
-if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing.conf");
+if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing-inotify.conf");
 if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
 require_once("{$configuration['rootfolder']}files/functions.inc");
 
@@ -56,19 +56,19 @@ if (isset($_POST['revert_url']) && $_POST['revert_url']) {
 }
 
 if (isset($_POST['get_file']) && $_POST['get_file']) {
-    if (!empty($_POST['download_url'])) { 
+    if (!empty($_POST['download_url'])) {
         exec("killall syncthing");
-        $v = explode(" ", stg_call("syncthing -version"));
-        mwexec("cp -v {$configuration['rootfolder']}syncthing {$configuration['backupfolder']}syncthing-{$v[1]}", true);
-        $savemsg .= sprintf(gettext("Syncthing version %s has been backuped!"), $v[1]);
+        $v = explode(" ", stg_call("syncthing-inotify -version"));
+        mwexec("cp -v {$configuration['rootfolder']}syncthing-inotify {$configuration['backupfolder']}syncthing-inotify-{$v[1]}", true);
+        $savemsg .= sprintf(gettext("Syncthing Inotify version %s has been backuped!"), $v[1]);
         $return_val = mwexec ("fetch -o {$configuration['rootfolder']}stable {$_POST['download_url']}", true);
         if ( $return_val != 0) { $input_errors[] = gettext("Could not install new version!"); }
         else {
             exec ("cd {$configuration['rootfolder']} && tar -xzvf stable --strip-components 1");
             exec ("rm {$configuration['rootfolder']}stable");
-            $configuration['product_version'] = stg_call("syncthing -version");
+            $configuration['product_version'] = stg_call("syncthing-inotify -version");
             $v = explode(" ", $configuration['product_version']);
-            mwexec("cp -v {$configuration['rootfolder']}syncthing {$configuration['backupfolder']}syncthing-{$v[1]}", true);
+            mwexec("cp -v {$configuration['rootfolder']}syncthing-inotify {$configuration['backupfolder']}syncthing-inotify-{$v[1]}", true);
 			ext_save_config($config_file, $configuration);
             $savemsg .= " ".gettext("New version installed!");
         }
@@ -76,27 +76,27 @@ if (isset($_POST['get_file']) && $_POST['get_file']) {
 }
 
 if (isset($_POST['install_new']) && $_POST['install_new']) {
-    if ($configuration['enable']) { 
-        exec("killall syncthing");
+    if ($configuration['enable']) {
+        exec("killall syncthing-inotify");
         $return_val = 0;
-        while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing', $output, $return_val); }
+        while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing-inotify', $output, $return_val); }
     }
-    stg_call("syncthing -upgrade", $return_val); 
+    stg_call("syncthing-inotify -upgrade", $return_val);
     if ( $return_val != 0) { $input_errors[] = gettext("Could not install new version!"); }
     else {
         if ($configuration['enable']) { exec($configuration['command']); }
-        $configuration['product_version'] = stg_call("syncthing -version");
+        $configuration['product_version'] = stg_call("syncthing-inotify -version");
         $v = explode(" ", stg_call("syncthing.old -version"));
-       	copy($configuration['rootfolder']."syncthing", $configuration['backupfolder']."syncthing-{$v[1]}");
+       	copy($configuration['rootfolder']."syncthing-inotify", $configuration['backupfolder']."syncthing-inotify-{$v[1]}");
         $pconfig['product_version_new'] = "n/a";
         $configuration['product_version_new'] = $pconfig['product_version_new'];
 		ext_save_config($config_file, $configuration);
         $savemsg .= gettext("New version installed!");
-    }	
+    }
 }
 
 if (isset($_POST['fetch']) && $_POST['fetch']) {
-    $upgrademsg = stg_call("syncthing -upgrade-check");
+    $upgrademsg = stg_call("syncthing-inotify -upgrade-check");
     $v = explode('"', $upgrademsg);
     $pconfig['product_version_new'] = $v[3];
     if (strpos($upgrademsg, "FATAL") !== false) { $pconfig['product_version_new'] = 'n/a'; $input_errors[] = gettext("Could not retrieve new version!"); }
@@ -126,16 +126,16 @@ if ( isset( $_POST['install_backup'] ) && $_POST['install_backup'] ) {
     if ( !isset($_POST['installfile']) ) { $input_errors[] = gettext("No file selected to install!") ; }
     else {
         if (is_file($_POST['installfile'])) {
-            if ($configuration['enable']) { 
-                exec("killall syncthing");
+            if ($configuration['enable']) {
+                exec("killall syncthing-inotify");
                 $return_val = 0;
-                while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing', $output, $return_val); }
+                while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing-inotify', $output, $return_val); }
             }
             if (!copy($_POST['installfile'], $configuration['rootfolder']."syncthing")) { $input_errors[] = gettext("Could not install backup version!"); }
             else {
                 if ($configuration['enable']) { exec($configuration['command']); }
-                $configuration['product_version'] = stg_call("syncthing -version");
-                $pconfig['product_version_new'] = "n/a"; 
+                $configuration['product_version'] = stg_call("syncthing-inotify -version");
+                $pconfig['product_version_new'] = "n/a";
                 $configuration['product_version_new'] = $pconfig['product_version_new'];
 				ext_save_config($config_file, $configuration);
                 if ($configuration['enable']) { $savemsg .= gettext("Backup version installed!"); }
@@ -174,7 +174,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             $configuration['schedule_startup'] = $_POST['startup'];
             $configuration['schedule_closedown'] = $_POST['closedown'];
             $configuration['schedule_prohibit'] = isset($_POST['prohibit']);
-    
+
             $cronjob = array();
 			if (!is_array($config['cron'])) $config['cron'] = [];
             $a_cronjob = &$config['cron']['job'];
@@ -222,7 +222,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             	}
             updatenotify_set("cronjob", $mode, $cronjob['uuid']);
             write_config();
-    
+
             unset ($cronjob);
             $cronjob = array();
 			if (!is_array($config['cron'])) $config['cron'] = [];
@@ -351,7 +351,7 @@ function radiolist ($file_list) {
 	} // end of verifying rootfolder as valid location
 	return $installFiles ;
 }
- 
+
 function get_process_info() {
     if (exec('ps acx | grep syncthing')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; $proc_state = 'running'; }
     else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
@@ -372,7 +372,7 @@ include("fbegin.inc");?>
 <script type="text/javascript">//<![CDATA[
 $(document).ready(function(){
 	var gui = new GUI;
-	gui.recall(0, 2000, 'syncthing_update.php', null, function(data) {
+	gui.recall(0, 2000, 'syncthing_inotify_update.php', null, function(data) {
 		$('#procinfo').html(data.data);
 	});
 });
@@ -382,7 +382,7 @@ $(document).ready(function(){
 <!--
 function update_change() {
 	// Reload page
-	window.document.location.href = 'syncthing_update.php?update=' + document.iform.update.value;
+	window.document.location.href = 'syncthing_inotify_update.php?update=' + document.iform.update.value;
 }
 
 <!-- This function allows the pages to render the buttons impotent whilst carrying out various functions -->
@@ -410,14 +410,14 @@ function enable_change(enable_change) {
 <script src="ext/syncthing/spin.min.js"></script>
 <!-- use: onsubmit="spinner()" within the form tag -->
 
-<form action="syncthing_update.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="syncthing_inotify_update.php" method="post" name="iform" id="iform" onsubmit="spinner()">
 <?php bindtextdomain("nas4free", "/usr/local/share/locale-stg"); ?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr><td class="tabnavtbl">
 		<ul id="tabnav">
-			<li class="tabinact"><a href="syncthing.php"><span><?=gettext("Configuration");?></span></a></li>
-			<li class="tabact"><a href="syncthing_update.php"><span><?=gettext("Maintenance");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing-inotify.php"><span><?=gettext("Configuration");?></span></a></li>
+			<li class="tabact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
 		</ul>
 	</td></tr>
@@ -484,7 +484,7 @@ function enable_change(enable_change) {
             <?php if (!isset($configuration['command'])){ $disabled = "disabled"; } else { $disabled = ""; } ?>
             <input id="schedule" name="schedule" type="submit" <?=$disabled;?> class="formbtn" value="<?=gettext("Save and Restart");?>" onclick="enable_change(true)" />
         </div>
-        <?php 
+        <?php
         include("formend.inc");?>
     </td></tr>
 </table>

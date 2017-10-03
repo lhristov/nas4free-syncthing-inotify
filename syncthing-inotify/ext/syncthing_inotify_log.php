@@ -1,7 +1,7 @@
 <?php
 /*
 	syncthing_inotify_log.php
-	
+
     Copyright (c) 2013 - 2017 Andreas Schmidhuber <info@a3s.at>
     All rights reserved.
 
@@ -38,9 +38,9 @@ if (empty($log))
 
 bindtextdomain("nas4free", "/usr/local/share/locale-stg");
 
-$config_file = "ext/syncthing/syncthing.conf";
+$config_file = "ext/syncthing/syncthing-inotify.conf";
 require_once("ext/syncthing/extension-lib.inc");
-if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing.conf");
+if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing-inotify.conf");
 if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
 
 $pgtitle = array(gettext("Extensions"), $configuration['appname']." ".$configuration['version'], gettext("Log"));
@@ -88,8 +88,8 @@ function log_change() {
     	<tr><td class="tabnavtbl">
     		<ul id="tabnav">
     			<li class="tabinact"><a href="syncthing.php"><span><?=gettext("Configuration");?></span></a></li>
-    			<li class="tabinact"><a href="syncthing_update.php"><span><?=gettext("Maintenance");?></span></a></li>
-    			<li class="tabinact"><a href="syncthing_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
+    			<li class="tabinact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
+    			<li class="tabinact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
     			<li class="tabact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
     		</ul>
     	</td></tr>

@@ -1,1 +1,1 @@
-<a href="syncthing.php">Syncthing Inotify</a>
+<a href="syncthing-inotify.php">Syncthing Inotify</a>

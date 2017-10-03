@@ -1,7 +1,7 @@
 <?php
 /*
-    syncthing_update_extension.php
-    
+    syncthing_inotify_update_extension.php
+
     Copyright (c) 2013 - 2017 Andreas Schmidhuber <info@a3s.at>
     All rights reserved.
 
@@ -30,9 +30,9 @@ require("guiconfig.inc");
 
 bindtextdomain("nas4free", "/usr/local/share/locale-stg");
 
-$config_file = "ext/syncthing/syncthing.conf";
+$config_file = "ext/syncthing/syncthing-inotify.conf";
 require_once("ext/syncthing/extension-lib.inc");
-if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing.conf");
+if (($configuration = ext_load_config($config_file)) === false) $input_errors[] = sprintf(gettext("Configuration file %s not found!"), "syncthing-inotify.conf");
 if (!isset($configuration['rootfolder']) && !is_dir($configuration['rootfolder'] )) $input_errors[] = gettext("Extension installed with fault");
 
 $pgtitle = array(gettext("Extensions"), $configuration['appname']." ".$configuration['version'], gettext("Extension Maintenance"));
@@ -125,7 +125,7 @@ if (isset($_POST['ext_update']) && $_POST['ext_update']) {
 // download installer
     $return_val = mwexec("fetch -vo {$install_dir}/stg-install.php https://raw.github.com/crestAT/nas4free-syncthing/master/stg-install.php", true);
     if ($return_val == 0) {
-        require_once("{$install_dir}/stg-install.php"); 
+        require_once("{$install_dir}/stg-install.php");
         header("Refresh:8");;
 //        $savemsg = sprintf(gettext("Update to version %s completed!"), $configuration['version']);
     }
@@ -139,14 +139,14 @@ include("fbegin.inc");?>
 <script src="ext/syncthing/spin.min.js"></script>
 <!-- use: onsubmit="spinner()" within the form tag -->
 
-<form action="syncthing_update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
+<form action="syncthing_inotify_update_extension.php" method="post" name="iform" id="iform" onsubmit="spinner()">
 <?php bindtextdomain("nas4free", "/usr/local/share/locale-stg"); ?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr><td class="tabnavtbl">
 		<ul id="tabnav">
 			<li class="tabinact"><a href="syncthing.php"><span><?=gettext("Configuration");?></span></a></li>
-			<li class="tabinact"><a href="syncthing_update.php"><span><?=gettext("Maintenance");?></span></a></li>
-			<li class="tabact"><a href="syncthing_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
+			<li class="tabinact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
+			<li class="tabact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
 		</ul>
 	</td></tr>
