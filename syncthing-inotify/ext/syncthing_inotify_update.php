@@ -57,7 +57,7 @@ if (isset($_POST['revert_url']) && $_POST['revert_url']) {
 
 if (isset($_POST['get_file']) && $_POST['get_file']) {
     if (!empty($_POST['download_url'])) {
-        exec("killall syncthing");
+        exec("killall syncthing-inotify");
         $v = explode(" ", stg_call("syncthing-inotify -version"));
         mwexec("cp -v {$configuration['rootfolder']}syncthing-inotify {$configuration['backupfolder']}syncthing-inotify-{$v[1]}", true);
         $savemsg .= sprintf(gettext("Syncthing Inotify version %s has been backuped!"), $v[1]);
@@ -86,7 +86,7 @@ if (isset($_POST['install_new']) && $_POST['install_new']) {
     else {
         if ($configuration['enable']) { exec($configuration['command']); }
         $configuration['product_version'] = stg_call("syncthing-inotify -version");
-        $v = explode(" ", stg_call("syncthing.old -version"));
+        $v = explode(" ", stg_call("syncthing-inotify.old -version"));
        	copy($configuration['rootfolder']."syncthing-inotify", $configuration['backupfolder']."syncthing-inotify-{$v[1]}");
         $pconfig['product_version_new'] = "n/a";
         $configuration['product_version_new'] = $pconfig['product_version_new'];
@@ -131,7 +131,7 @@ if ( isset( $_POST['install_backup'] ) && $_POST['install_backup'] ) {
                 $return_val = 0;
                 while( $return_val == 0 ) { sleep(1); exec('ps acx | grep syncthing-inotify', $output, $return_val); }
             }
-            if (!copy($_POST['installfile'], $configuration['rootfolder']."syncthing")) { $input_errors[] = gettext("Could not install backup version!"); }
+            if (!copy($_POST['installfile'], $configuration['rootfolder']."syncthing-inotify")) { $input_errors[] = gettext("Could not install backup version!"); }
             else {
                 if ($configuration['enable']) { exec($configuration['command']); }
                 $configuration['product_version'] = stg_call("syncthing-inotify -version");
@@ -182,7 +182,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
             	$cronjob['enable'] = true;
             	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-            	$cronjob['desc'] = "Syncthing startup (@ {$configuration['schedule_startup']}:00)";
+            	$cronjob['desc'] = "Syncthing Inotify startup (@ {$configuration['schedule_startup']}:00)";
             	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
             	$cronjob['hour'] = $configuration['schedule_startup'];
             	$cronjob['day'] = $a_cronjob[$cnid]['day'];
@@ -194,11 +194,11 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
             	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
             	$cronjob['who'] = 'root';
-            	$cronjob['command'] = "/usr/local/bin/php-cgi -f {$configuration['rootfolder']}syncthing-start.php && logger syncthing-extension: scheduled startup";
+            	$cronjob['command'] = "/usr/local/bin/php-cgi -f {$configuration['rootfolder']}syncthing-inotify-start.php && logger syncthing-inotify-extension: scheduled startup";
             } else {
             	$cronjob['enable'] = true;
             	$cronjob['uuid'] = uuid();
-            	$cronjob['desc'] = "Syncthing startup (@ {$configuration['schedule_startup']}:00)";
+            	$cronjob['desc'] = "Syncthing Inotify startup (@ {$configuration['schedule_startup']}:00)";
             	$cronjob['minute'] = 0;
             	$cronjob['hour'] = $configuration['schedule_startup'];
             	$cronjob['day'] = true;
@@ -210,7 +210,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             	$cronjob['all_months'] = 1;
             	$cronjob['all_weekdays'] = 1;
             	$cronjob['who'] = 'root';
-            	$cronjob['command'] = "/usr/local/bin/php-cgi -f {$configuration['rootfolder']}syncthing-start.php && logger syncthing-extension: scheduled startup";
+            	$cronjob['command'] = "/usr/local/bin/php-cgi -f {$configuration['rootfolder']}syncthing-inotify-start.php && logger syncthing-inotify-extension: scheduled startup";
                 $configuration['schedule_uuid_startup'] = $cronjob['uuid'];
             }
             if (isset($uuid) && (FALSE !== $cnid)) {
@@ -231,7 +231,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_cronjob, "uuid")))) {
             	$cronjob['enable'] = true;
             	$cronjob['uuid'] = $a_cronjob[$cnid]['uuid'];
-            	$cronjob['desc'] = "Syncthing closedown (@ {$configuration['schedule_closedown']}:00)";
+            	$cronjob['desc'] = "Syncthing Inotify closedown (@ {$configuration['schedule_closedown']}:00)";
             	$cronjob['minute'] = $a_cronjob[$cnid]['minute'];
             	$cronjob['hour'] = $configuration['schedule_closedown'];
             	$cronjob['day'] = $a_cronjob[$cnid]['day'];
@@ -243,11 +243,11 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             	$cronjob['all_months'] = $a_cronjob[$cnid]['all_months'];
             	$cronjob['all_weekdays'] = $a_cronjob[$cnid]['all_weekdays'];
             	$cronjob['who'] = 'root';
-            	$cronjob['command'] = 'killall syncthing && logger syncthing-extension: scheduled closedown';
+            	$cronjob['command'] = 'killall syncthing-inotify && logger syncthing-inotify-extension: scheduled closedown';
             } else {
             	$cronjob['enable'] = true;
             	$cronjob['uuid'] = uuid();
-            	$cronjob['desc'] = "Syncthing closedown (@ {$configuration['schedule_closedown']}:00)";
+            	$cronjob['desc'] = "Syncthing Inotify closedown (@ {$configuration['schedule_closedown']}:00)";
             	$cronjob['minute'] = 0;
             	$cronjob['hour'] = $configuration['schedule_closedown'];
             	$cronjob['day'] = true;
@@ -259,7 +259,7 @@ if ( isset( $_POST['schedule'] ) && $_POST['schedule'] ) {
             	$cronjob['all_months'] = 1;
             	$cronjob['all_weekdays'] = 1;
             	$cronjob['who'] = 'root';
-            	$cronjob['command'] = 'killall syncthing && logger syncthing-extension: scheduled closedown';
+            	$cronjob['command'] = 'killall syncthing-inotify && logger syncthing-inotify-extension: scheduled closedown';
                 $configuration['schedule_uuid_closedown'] = $cronjob['uuid'];
             }
             if (isset($uuid) && (FALSE !== $cnid)) {
@@ -353,7 +353,7 @@ function radiolist ($file_list) {
 }
 
 function get_process_info() {
-    if (exec('ps acx | grep syncthing')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; $proc_state = 'running'; }
+    if (exec('ps acx | grep syncthing-inotify')) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; $proc_state = 'running'; }
     else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
 	return ($state);
 }
@@ -365,7 +365,7 @@ if (is_ajax()) {
 
 $wait_message = gettext("The selected operation will be completed. Please do not click any other buttons!");
 
-if (($message = ext_check_version("{$configuration['rootfolder']}version_server.txt", "syncthing", $configuration['version'], gettext("Extension Maintenance"))) !== false) $savemsg .= $message;
+if (($message = ext_check_version("{$configuration['rootfolder']}version_server.txt", "syncthing-inotify", $configuration['version'], gettext("Extension Maintenance"))) !== false) $savemsg .= $message;
 
 bindtextdomain("nas4free", "/usr/local/share/locale");
 include("fbegin.inc");?>
@@ -432,7 +432,7 @@ function enable_change(enable_change) {
     		  </tr>
  			<?php html_text("version_current", gettext("Installed version"), $configuration['product_version']);?>
 			<tr>
-				<td valign="top" class="vncell"><?=gettext("Latest version fetched from Syncthing server");?>
+				<td valign="top" class="vncell"><?=gettext("Latest version fetched from Syncthing Inotify server");?>
 				</td>
 				<td class="vtable"><?=$pconfig['product_version_new'].gettext(" - push 'fetch' button to check for new version");?>
                     <span class="label">&nbsp;&nbsp;&nbsp;</span>
@@ -440,7 +440,7 @@ function enable_change(enable_change) {
                     <?php if (($configuration['product_version_new'] !== "n/a") && (strpos($configuration['product_version'], $configuration['product_version_new']) === false)) { ?>
                         <input id="install_new" name="install_new" type="submit" class="formbtn" value="<?=gettext("Install");?>" onClick="return fetch_handler();" />
                     <?php } ?>
-                    <a href='http://syncthing.net/' target='_blank'>&nbsp;&nbsp;&nbsp;-> Syncthing</a>
+                    <a href='http://syncthing.net/' target='_blank'>&nbsp;&nbsp;&nbsp;-> Syncthing Inotify</a>
 				</td>
 			</tr>
             <?php html_inputbox("download_url", gettext("Download URL"), $configuration['download_url'], sprintf(gettext("Define a new permanent application download URL or an URL for a one-time download of a previous version.<br />Previous download URL was <b>%s</b>"), $configuration['previous_url']), false, 110);?>
@@ -477,7 +477,7 @@ function enable_change(enable_change) {
     		<?php $hours = array(0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23); ?>
             <?php html_combobox("startup", gettext("Startup"), $configuration['schedule_startup'], $hours, gettext("Choose a startup hour for")." ".$configuration['appname'], true);?>
             <?php html_combobox("closedown", gettext("Closedown"), $configuration['schedule_closedown'], $hours, gettext("Choose a closedown hour for")." ".$configuration['appname'], true);?>
-            <?php html_checkbox("prohibit", gettext("System Startup"), $configuration['schedule_prohibit'], gettext("Prohibit Syncthing start on system startup if scheduling is activated and the server startup time is outside the range of the defined startup and closedown hour. "), false);?>
+            <?php html_checkbox("prohibit", gettext("System Startup"), $configuration['schedule_prohibit'], gettext("Prohibit syncthing-inotify Inotify start on system startup if scheduling is activated and the server startup time is outside the range of the defined startup and closedown hour. "), false);?>
 			<?php html_separator();?>
         </table>
         <div id="submit_schedule">

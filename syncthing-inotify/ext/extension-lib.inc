@@ -32,7 +32,7 @@
 
 $extension_lib_version = "1.1";
 /* Version history:
- * 1.1	2017.02.28	save config in ext_remove_rc_commands and ext_create_rc_commands 
+ * 1.1	2017.02.28	save config in ext_remove_rc_commands and ext_create_rc_commands
  * 1.0	2017.02.27	includes changes for PHP 7.1
 */
 
@@ -42,7 +42,7 @@ $extension_lib_version = "1.1";
  *		$min_release:	a float string to compare with the current used release, e.g.: 9.3, 10.3.0.3.2853 => 10.3032853, 11.0
  *	return:
  * 		true	=> current release >= minimal release
- * 		false	=> current release < minimal release 
+ * 		false	=> current release < minimal release
 */
 if (!function_exists('ext_check_release'))   {
     function ext_check_release($min_release) {
@@ -97,7 +97,7 @@ if (!function_exists('ext_create_rc_commands'))   {
 				if (!is_array($config['rc'])) $config['rc'] = [];
 				if (!is_array($config['rc']['param'])) $config['rc']['param'] = [];
 				$config['rc']['param'][] = $rc_param;
-				$shutdown = $rc_param['uuid'];				
+				$shutdown = $rc_param['uuid'];
 				unset($rc_param);
 			}
 		}
@@ -118,7 +118,7 @@ if (!function_exists('ext_create_rc_commands'))   {
 /*	function ext_remove_rc_commands
  *	remove postinit / shutdown commands from rc array for both NAS4Free < 11.x and >= 11.x series
  *	params:
- *		$config_name:	string to identify the rc command entry in rc|postinit/shutdown|cmd or rc|param|value 		                                    	
+ *		$config_name:	string to identify the rc command entry in rc|postinit/shutdown|cmd or rc|param|value
 */
 if (!function_exists('ext_remove_rc_commands'))   {
     function ext_remove_rc_commands($config_name) {
@@ -157,7 +157,7 @@ if (!function_exists('ext_remove_rc_commands'))   {
  * 	return:
  * 		empty:	no new version found
  * 		or string:	message for user action on new version found
- * 		or false: 	Github version could not be retrieved 
+ * 		or false: 	Github version could not be retrieved
 */
 if (!function_exists('ext_check_version'))   {
     function ext_check_version($test_filename, $extension_name, $current_version, $button_name) {
@@ -174,12 +174,12 @@ if (!function_exists('ext_check_version'))   {
 }
 
 /*	function ext_load_config
- *	loads a json formatted array from a standalone file 
+ *	loads a json formatted array from a standalone file
  *	params:
  *		$config_file:	config file including full path
  * 	return:
  *		data array:	json formatted array
- * 		or false:	config file not found or content not retrievable 		
+ * 		or false:	config file not found or content not retrievable
 */
 if (!function_exists('ext_load_config'))   {
     function ext_load_config($config_file, $assoc = true, $depth = 512, $options = 0) {

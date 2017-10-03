@@ -41,11 +41,11 @@ if (is_file("{$configuration['updatefolder']}oneload")) {
     require_once("{$configuration['updatefolder']}oneload");
 }
 
-$return_val = mwexec("fetch -o {$configuration['updatefolder']}version.txt https://raw.github.com/crestAT/nas4free-syncthing/master/syncthing/version.txt", false);
+$return_val = mwexec("fetch -o {$configuration['updatefolder']}version.txt https://raw.githubusercontent.com/lhristov/nas4free-syncthing-inotify/master/syncthing-inotify/version.txt", false);
 if ($return_val == 0) {
     $server_version = exec("cat {$configuration['updatefolder']}version.txt");
     if ($server_version != $configuration['version']) { $savemsg = sprintf(gettext("New extension version %s available, push '%s' button to install the new version!"), $server_version, gettext("Update Extension")); }
-    mwexec("fetch -o {$configuration['rootfolder']}release_notes.txt https://raw.github.com/crestAT/nas4free-syncthing/master/syncthing/release_notes.txt", false);
+    mwexec("fetch -o {$configuration['rootfolder']}release_notes.txt https://raw.githubusercontent.com/lhristov/nas4free-syncthing-inotify/master/syncthing-inotify/release_notes.txt", false);
 }
 else { $server_version = gettext("Unable to retrieve version from server!"); }
 
@@ -72,15 +72,15 @@ function cronjob_process_updatenotification($mode, $data) {
 if (isset($_POST['ext_remove']) && $_POST['ext_remove']) {
     $install_dir = dirname($configuration['rootfolder']);
 // kill running process
-    exec("killall syncthing");
+    exec("killall syncthing-inotify");
 // remove start/stop commands
-	ext_remove_rc_commands("syncthing");
+	ext_remove_rc_commands("syncthing-inotify");
 // unlink created  links
-	if (is_dir ("/usr/local/www/ext/syncthing")) {
+	if (is_dir ("/usr/local/www/ext/syncthing-inotify")) {
 		foreach ( glob( "{$configuration['rootfolder']}ext/*.php" ) as $file ) {
 		$file = str_replace("{$configuration['rootfolder']}ext/", "/usr/local/www", $file);
 		if ( is_link( $file ) ) { unlink( $file ); } else {} }
-		mwexec("rm -rf /usr/local/www/ext/syncthing");
+		mwexec("rm -rf /usr/local/www/ext/syncthing-inotify");
 		mwexec("rmdir -p /usr/local/www/ext");    // to prevent empty extensions menu entry in top GUI menu if there are no other extensions installed
 	}
 // remove cronjobs
@@ -123,7 +123,7 @@ if (isset($_POST['ext_remove']) && $_POST['ext_remove']) {
 if (isset($_POST['ext_update']) && $_POST['ext_update']) {
     $install_dir = dirname($configuration['rootfolder']);
 // download installer
-    $return_val = mwexec("fetch -vo {$install_dir}/stg-install.php https://raw.github.com/crestAT/nas4free-syncthing/master/stg-install.php", true);
+    $return_val = mwexec("fetch -vo {$install_dir}/stg-install.php https://raw.githubusercontent.com/lhristov/nas4free-syncthing-inotify/master/syncthing-inotify/stg-install.php", true);
     if ($return_val == 0) {
         require_once("{$install_dir}/stg-install.php");
         header("Refresh:8");;
@@ -144,7 +144,7 @@ include("fbegin.inc");?>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
 	<tr><td class="tabnavtbl">
 		<ul id="tabnav">
-			<li class="tabinact"><a href="syncthing.php"><span><?=gettext("Configuration");?></span></a></li>
+			<li class="tabinact"><a href="syncthing-inotify.php"><span><?=gettext("Configuration");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_update.php"><span><?=gettext("Maintenance");?></span></a></li>
 			<li class="tabact"><a href="syncthing_inotify_update_extension.php"><span><?=gettext("Extension Maintenance");?></span></a></li>
 			<li class="tabinact"><a href="syncthing_inotify_log.php"><span><?=gettext("Log");?></span></a></li>
@@ -160,7 +160,7 @@ include("fbegin.inc");?>
 			<?php html_separator();?>
         </table>
         <div id="update_remarks">
-            <?php html_remark("note_remove", gettext("Note"), gettext("Removing Syncthing integration from NAS4Free will leave the installation folder untouched - remove the files using Windows Explorer, FTP or some other tool of your choice. <br /><b>Please note: this page will no longer be available.</b> You'll have to re-run Syncthing extension installation to get it back on your NAS4Free."));?>
+            <?php html_remark("note_remove", gettext("Note"), gettext("Removing Syncthing Inotify integration from NAS4Free will leave the installation folder untouched - remove the files using Windows Explorer, FTP or some other tool of your choice. <br /><b>Please note: this page will no longer be available.</b> You'll have to re-run Syncthing Inotify extension installation to get it back on your NAS4Free."));?>
             <br />
             <input id="ext_update" name="ext_update" type="submit" class="formbtn" value="<?=gettext("Update Extension");?>" onclick="return confirm('<?=gettext("The selected operation will be completed. Please do not click any other buttons!");?>')" />
             <input id="ext_remove" name="ext_remove" type="submit" class="formbtn" value="<?=gettext("Remove Extension");?>" onclick="return confirm('<?=gettext("Do you really want to remove the extension from the system?");?>')" />
