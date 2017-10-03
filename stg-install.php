@@ -25,7 +25,7 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-$version = "v0.0.2";		// extension version
+$version = "v0.0.3";		// extension version
 $v = "v0.8.7";			// application version
 $appname = "Syncthing Inotify";
 $config_name = strtolower($appname);
@@ -52,10 +52,13 @@ $release = explode("-", exec("uname -r"));
 if ($release[0] >= 9.3) $verify_hostname = "--no-verify-hostname";
 else $verify_hostname = "";
 
-$return_val = mwexec("fetch {$verify_hostname} -vo {$install_dir}master.tar.gz 'https://github.com/lhristov/nas4free-syncthing-inotify/releases/download/{$version}/syncthing-inotify-{$version}.tar.gz'", true);
+echo "Downloading nas4free-syncthing-inotify-{$version}.tar.gz";
+$return_val = mwexec("fetch {$verify_hostname} -vo {$install_dir}master.tar.gz 'https://github.com/lhristov/nas4free-syncthing-inotify/releases/download/{$version}/nas4free-syncthing-inotify-{$version}.tar.gz'", true);
 if ($return_val == 0) {
+    echo "Extracting {$install_dir}master.tar.gz";
     $return_val = mwexec("tar -zxf {$install_dir}master.tar.gz -C {$install_dir} --exclude='.git*' --strip-components 1", true);
     if ($return_val == 0) {
+        echo "Configuring nas4free-syncthing-inotify-{$version}";
         exec("rm {$install_dir}master.tar.gz");
         exec("chmod -R 775 {$install_dir}syncthing-inotify");
         require_once("{$install_dir}syncthing-inotify/ext/extension-lib.inc");
