@@ -112,7 +112,6 @@ function change_perms($dir) {
 if (isset($_POST['save']) && $_POST['save']) {
     unset($input_errors);
 //    $pconfig = $_POST;
-    if (!empty($_POST['storage_path'])) { change_perms($_POST['storage_path']); }
 	if (empty($input_errors)) {
 		if (isset($_POST['enable'])) {
 
@@ -128,7 +127,7 @@ if (isset($_POST['save']) && $_POST['save']) {
 
             $api_parameter = !empty($configuration['api_key']) ? "-api=" . $configuration['api_key'] : "";
 
-    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$api_parameter} > {$configuration['storage_path']}syncthing-inotify.log & '";
+    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$api_parameter} > {$configuration['rootfolder']}syncthing-inotify.log & '";
 
             exec("killall syncthing-inotify");
             $return_val = 0;
@@ -149,7 +148,6 @@ if (isset($_POST['save']) && $_POST['save']) {
 $pconfig['enable'] = $configuration['enable'];
 $pconfig['who'] = !empty($configuration['who']) ? $configuration['who'] : "";
 $pconfig['if'] = !empty($configuration['if']) ? $configuration['if'] : "";
-$pconfig['storage_path'] = !empty($configuration['storage_path']) ? $configuration['storage_path'] : $configuration['rootfolder']."config/";
 $pconfig['api_key'] = !empty($configuration['api_key']) ? $configuration['api_key'] : "";
 $pconfig['syncthing_extension_path'] = !empty($configuration['syncthing_extension_path']) ? $configuration['syncthing_extension_path'] : "";
 
@@ -184,8 +182,6 @@ function enable_change(enable_change) {
 	document.iform.autoUpgradeIntervalH.disabled = endis;
 	document.iform.resetuser.disabled = endis;
 	document.iform.who.disabled = endis;
-	document.iform.storage_path.disabled = endis;
-	document.iform.storage_pathbrowsebtn.disabled = endis;
 	document.iform.gui_enabled.disabled = endis;
 }
 
@@ -194,7 +190,6 @@ function as_change() {
 		case false:
 			showElementById('who_tr','hide');
 			showElementById('xif_tr','hide');
-			showElementById('storage_path_tr','hide');
 			showElementById('gui_enabled_tr','hide');
             showElementById('syncthing_extension_path_tr','hide');
 			showElementById('api_key_tr','hide');
@@ -203,7 +198,6 @@ function as_change() {
 		case true:
 			showElementById('who_tr','show');
 			showElementById('xif_tr','show');
-			showElementById('storage_path_tr','show');
 			showElementById('gui_enabled_tr','show');
             showElementById('syncthing_extension_path_tr','show');
 			showElementById('api_key_tr','show');
@@ -248,8 +242,7 @@ function as_change() {
         	<?php html_titleline_checkbox("enable", $configuration['appname'], $pconfig['enable'], gettext("Enable"), "enable_change(false)");?>
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
-			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'] . ' whatever', $g['media_path'], false, 60);?>
+            <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'], $g['media_path'], false, 60);?>
             <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 60);?>
         </table>
         <div id="submit">
