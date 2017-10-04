@@ -46,6 +46,35 @@ define("GLOBALASERVER", "default");
 
 $pgtitle = array(gettext("Extensions"), $configuration['appname']." ".$configuration['version']);
 
+function get_syncthing_home($process = 'syncthing') {
+    if (exec("ps ax | grep {$process}", $out) && is_array($out)) { // syncthing is running
+        preg_match_all('/-home ([^$ ]*)/', implode("\n", $out), $matches, PREG_SET_ORDER, 0);
+        if(isset($matches[0]) && isset($matches[0][1])) {
+            if(is_dir(trim($matches[0][1]))) {
+                return trim($matches[0][1]);
+            }
+            return "";
+        }
+    } else {
+        return "";
+    }
+}
+
+function get_syncthing_options($path) {
+    if (is_file($path)) {
+        $syncthing_conf = XML2Array::createArray(file_get_contents($path));
+    } else {
+        $syncthing_conf = array();
+    }
+    return $syncthing_conf;
+}
+
+function get_process_info($process = 'syncthing-inotify') {
+    if (exec("ps acx | grep {$process}")) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
+    else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
+	return ($state);
+}
+
 /* Check if the directory exists, the mountpoint has at least o=rx permissions and
  * set the permission to 775 for the last directory in the path
  */
@@ -86,20 +115,20 @@ if (isset($_POST['save']) && $_POST['save']) {
     if (!empty($_POST['storage_path'])) { change_perms($_POST['storage_path']); }
 	if (empty($input_errors)) {
 		if (isset($_POST['enable'])) {
+
+            $configuration['syncthing_extension_path'] = !empty($_POST['syncthing_extension_path']) ? $_POST['syncthing_extension_path'] : get_syncthing_home();
+
+            $syncthing_conf = get_syncthing_options();
+
             $configuration['enable'] = isset($_POST['enable']);
             $configuration['who'] = $_POST['who'];
-            if ($configuration['storage_path'] !== $_POST['storage_path']) {
-                if (is_file("{$configuration['storage_path']}config.xml") && !is_file("{$_POST['storage_path']}config.xml")) {
-                    mwexec("cp -v {$configuration['storage_path']}config.xml {$_POST['storage_path']}config.xml", true);
-                }
-            }
-            $configuration['storage_path'] = !empty($_POST['storage_path']) ? $_POST['storage_path'] : $configuration['rootfolder']."config/";
-            $configuration['storage_path'] = rtrim($configuration['storage_path'],'/')."/";     // ensure to have a trailing slash
-            exec("chown -R {$_POST['who']} {$configuration['storage_path']}");                        // syncthing-inotify user
 
-            $sync_conf['configuration']['options']['api_key'] = !empty($_POST['api_key']) ? $_POST['api_key'] : "";
+            $configuration['api_key'] = !empty($_POST['api_key']) ? $_POST['api_key'] : (is_array($syncthing_conf) && !empty($syncthing_conf['configuration']['gui']['apikey']) ? $syncthing_conf['configuration']['gui']['apikey'] : "");
 
-    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify -logflags=3 > {$configuration['storage_path']}syncthing-inotify.log & '";
+
+            $api_parameter = !empty($configuration['api_key']) ? "-api=" . $configuration['api_key'] : "";
+
+    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$api_parameter} > {$configuration['storage_path']}syncthing-inotify.log & '";
 
             exec("killall syncthing-inotify");
             $return_val = 0;
@@ -121,29 +150,11 @@ $pconfig['enable'] = $configuration['enable'];
 $pconfig['who'] = !empty($configuration['who']) ? $configuration['who'] : "";
 $pconfig['if'] = !empty($configuration['if']) ? $configuration['if'] : "";
 $pconfig['storage_path'] = !empty($configuration['storage_path']) ? $configuration['storage_path'] : $configuration['rootfolder']."config/";
-$pconfig['api_key'] = !empty($sync_conf['configuration']['options']['api_key']) ? $sync_conf['configuration']['options']['api_key'] : "";
-$pconfig['syncthing_extension_path'] = !empty($sync_conf['configuration']['options']['syncthing_extension_path']) ? $sync_conf['configuration']['options']['syncthing_extension_path'] : get_syncthing_home();
+$pconfig['api_key'] = !empty($configuration['api_key']) ? $configuration['api_key'] : "";
+$pconfig['syncthing_extension_path'] = !empty($configuration['syncthing_extension_path']) ? $configuration['syncthing_extension_path'] : "";
 
 // Use first interface as default if it is not set.
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
-
-function get_process_info($process = 'syncthing-inotify') {
-    if (exec("ps acx | grep {$process}")) { $state = '<a style=" background-color: #00ff00; ">&nbsp;&nbsp;<b>'.gettext("running").'</b>&nbsp;&nbsp;</a>'; }
-    else { $state = '<a style=" background-color: #ff0000; ">&nbsp;&nbsp;<b>'.gettext("stopped").'</b>&nbsp;&nbsp;</a>'; }
-	return ($state);
-}
-
-
-function get_syncthing_home($process = 'syncthing') {
-    if (exec("ps ax | grep {$process}", $out) && is_array($out)) { // syncthing is running
-        preg_match_all('/-home ([^$ ]*)/', implode("\n", $out), $matches, PREG_SET_ORDER, 0);
-        if(isset($matches[0]) && isset($matches[0][1])) {
-            return $matches[0][1];
-        }
-    } else {
-        return "";
-    }
-}
 
 if (is_ajax()) {
 	$procinfo = get_process_info();
@@ -159,8 +170,8 @@ include("fbegin.inc");?>
 $(document).ready(function(){
 	var gui = new GUI;
 	gui.recall(0, 2000, 'syncthing-inotify.php', null, function(data) {
-		$('#procinfo').html(data.data.procinfo);
-        $('#syncthinginfo').html(data.data.syncthinginfo);
+		$('#procinfo').html(data.procinfo);
+        $('#syncthinginfo').html(data.syncthinginfo);
 	});
 });
 //]]>
@@ -238,7 +249,7 @@ function as_change() {
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
 			<?php html_filechooser("storage_path", gettext("Storage path"), $pconfig['storage_path'], gettext("Where to save auxilliary app files."), $g['media_path'], false, 60);?>
-            <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'], $g['media_path'], false, 60);?>
+            <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'] . ' whatever', $g['media_path'], false, 60);?>
             <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 60);?>
         </table>
         <div id="submit">

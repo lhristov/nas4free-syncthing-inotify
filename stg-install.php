@@ -25,7 +25,7 @@
     (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-$version = "v0.0.86";		// extension version
+$version = "v0.0.87";		// extension version
 $v = "v0.8.7";			// application version
 $appname = "Syncthing Inotify";
 $config_name = strtolower(str_replace(" ", "-", $appname));
