@@ -160,6 +160,8 @@ $pconfig['who'] = !empty($configuration['who']) ? $configuration['who'] : "";
 $pconfig['if'] = !empty($configuration['if']) ? $configuration['if'] : "";
 $pconfig['api_key'] = !empty($configuration['api_key']) ? $configuration['api_key'] : "";
 $pconfig['syncthing_extension_path'] = !empty($configuration['syncthing_extension_path']) ? $configuration['syncthing_extension_path'] : "";
+$pconfig['syncthing_ip'] = !empty($configuration['syncthing_ip']) ? $configuration['syncthing_ip'] : "";
+$pconfig['synchthing_port'] = !empty($configuration['synchthing_port']) ? $configuration['synchthing_port'] : "";
 
 // Use first interface as default if it is not set.
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
