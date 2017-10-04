@@ -137,7 +137,9 @@ if (isset($_POST['save']) && $_POST['save']) {
 
             $api_parameter = !empty($configuration['api_key']) ? "-api=" . $configuration['api_key'] : "";
 
-    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$api_parameter} > {$configuration['rootfolder']}syncthing-inotify.log & '";
+            $synchthing_ip = '-target="http://' . $ip . ":" . $port;
+
+    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$synchthing_ip} {$api_parameter} > {$configuration['rootfolder']}syncthing-inotify.log & '";
 
             exec("killall syncthing-inotify");
             $return_val = 0;
