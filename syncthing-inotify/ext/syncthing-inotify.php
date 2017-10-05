@@ -117,29 +117,10 @@ if (isset($_POST['save']) && $_POST['save']) {
 
             $configuration['syncthing_extension_path'] = !empty($_POST['syncthing_extension_path']) ? $_POST['syncthing_extension_path'] : get_syncthing_home();
 
-            $syncthing_conf = get_syncthing_options($configuration['syncthing_extension_path']);
-
             $configuration['enable'] = isset($_POST['enable']);
             $configuration['who'] = $_POST['who'];
 
-            $configuration['api_key'] = !empty($_POST['api_key']) ? $_POST['api_key'] : (is_array($syncthing_conf) && !empty($syncthing_conf['configuration']['gui']['apikey']) ? $syncthing_conf['configuration']['gui']['apikey'] : "");
-
-            $ip = "127.0.0.1";
-            $port = "8384";
-            if(is_array($syncthing_conf) && !empty($syncthing_conf['configuration']['gui']['address'])) {
-                $address = explode(":", $syncthing_conf['configuration']['gui']['address']);
-                $ip = $address[0];
-                $port = $address[1];
-            }
-            $configuration['syncthing_ip'] = !empty($_POST['syncthing_ip']) ? $_POST['syncthing_ip'] : $ip;
-            $configuration['syncthing_port'] = !empty($_POST['syncthing_port']) ? $_POST['syncthing_port'] : $port;
-
-
-            $api_parameter = !empty($configuration['api_key']) ? "-api=" . $configuration['api_key'] : "";
-
-            $syncthing_ip = '-target="https://' . $ip . ":" . $port . '"';
-
-    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify {$syncthing_ip} {$api_parameter} > {$configuration['rootfolder']}syncthing-inotify.log & '";
+    		$configuration['command'] = "su {$configuration['who']} -c '{$configuration['rootfolder']}syncthing-inotify -home={$configuration['syncthing_extension_path']} > {$configuration['rootfolder']}syncthing-inotify.log & '";
 
             exec("killall syncthing-inotify");
             $return_val = 0;
@@ -160,10 +141,7 @@ if (isset($_POST['save']) && $_POST['save']) {
 $pconfig['enable'] = $configuration['enable'];
 $pconfig['who'] = !empty($configuration['who']) ? $configuration['who'] : "";
 $pconfig['if'] = !empty($configuration['if']) ? $configuration['if'] : "";
-$pconfig['api_key'] = !empty($configuration['api_key']) ? $configuration['api_key'] : "";
 $pconfig['syncthing_extension_path'] = !empty($configuration['syncthing_extension_path']) ? $configuration['syncthing_extension_path'] : "";
-$pconfig['syncthing_ip'] = !empty($configuration['syncthing_ip']) ? $configuration['syncthing_ip'] : "";
-$pconfig['syncthing_port'] = !empty($configuration['syncthing_port']) ? $configuration['syncthing_port'] : "";
 
 // Use first interface as default if it is not set.
 if (empty($pconfig['if']) && is_array($a_interface)) $pconfig['if'] = key($a_interface);
@@ -206,9 +184,6 @@ function as_change() {
 			showElementById('xif_tr','hide');
 			showElementById('gui_enabled_tr','hide');
             showElementById('syncthing_extension_path_tr','hide');
-			showElementById('api_key_tr','hide');
-            showElementById('syncthing_ip_tr','hide');
-            showElementById('syncthing_port_tr','hide');
 			break;
 
 		case true:
@@ -216,9 +191,6 @@ function as_change() {
 			showElementById('xif_tr','show');
 			showElementById('gui_enabled_tr','show');
             showElementById('syncthing_extension_path_tr','show');
-			showElementById('api_key_tr','show');
-            showElementById('syncthing_ip_tr','show');
-            showElementById('syncthing_port_tr','show');
 			break;
 	}
 }
@@ -261,9 +233,6 @@ function as_change() {
     		<?php $a_user = array(); foreach (system_get_user_list() as $userk => $userv) { $a_user[$userk] = htmlspecialchars($userk); }?>
             <?php html_combobox("who", gettext("Username"), $pconfig['who'], $a_user, gettext("Specifies the username which the service will run as."), false);?>
             <?php html_filechooser("syncthing_extension_path", gettext("Synchthing Config"), $pconfig['syncthing_extension_path'], $g['media_path'], false, 60);?>
-            <?php html_inputbox("api_key", gettext("Api key"), $pconfig['api_key'], gettext("Syncthing API key."), false, 60);?>
-            <?php html_inputbox("syncthing_ip", gettext("SyncThing IP"), $pconfig['syncthing_ip'], gettext("Syncthing IP Address."), false, 60);?>
-            <?php html_inputbox("syncthing_port", gettext("SyncThing Port"), $pconfig['syncthing_port'], gettext("Syncthing Port."), false, 60);?>
         </table>
         <div id="submit">
 			<input id="save" name="save" type="submit" class="formbtn" value="<?=gettext("Save and Restart");?>"/>
